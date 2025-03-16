@@ -18,6 +18,7 @@ function Dashboard() {
   const [category, setCategory] = useState(null);
   const [description, setDescription] = useState(null);
   const [location, setLocation] = useState(null);
+  const [image, setImage] = useState(null);
   const [posts, setPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -25,13 +26,24 @@ function Dashboard() {
   const [userEmail, setUserEmail] = useState(null);
   const [error, setError] = useState(null);
   const [viewprofile, setViewprofile] = useState(false);
+  const [viewedit, setviewedit] = useState(false);
+  const [viewmore, setviewmore] = useState(false);
+  const [productid, setproductid] = useState(null);
+  // const [moreuser, setmoreuser] = useState(null);
+  // const [morename, setmorename] = useState(null);
+  // const [moredescription, setmoredescription] = useState(null);
+  // const [moreitems, setmoreitems] = useState(null);
+  // const [moreprice, setMoreUser] = useState(null);
+  // const [morelocation, setMoreUser] = useState(null);
+  // const [moreavailability, setMoreUser] = useState(null);
+  // const [morecategory, setMoreUser] = useState(null);
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
 
   const handleButtonClick = () => {
-    document.getElementById("fileInput").click(); // Trigger the file input click
+    document.getElementById("fileInput").click();
   };
 
   const handlePost = async (e) => {
@@ -183,7 +195,179 @@ function Dashboard() {
     <>
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="w-[100vw] h-[100vh]  flex flex-col ">
+      <div className="w-[100vw] h-[100vh]  flex flex-col relative  ">
+        {viewmore && (
+          <div className=" flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
+            <div className="w-[45%] h-[80%] bg-white flex flex-col justify-between items-end p-2">
+              <button
+                className="cursor-pointer text-yellow-300 "
+                onClick={() => {
+                  setviewmore(false);
+                }}
+              >
+                <IoMdClose className="text-[25px] " />
+              </button>
+              <div className="w-full p-2 h-[90%] bg-[#FEAE1F] flex">
+                <div className="w-[40%] h-full flex items-center justify-center">
+                  <div
+                    className="h-[50%] w-full  border-4 border-white bg-cover bg-center bg-no-repeat "
+                    style={{
+                      backgroundImage: `url(http://localhost:5000/uploads/${image})`,
+                    }}
+                  ></div>
+                </div>
+                <div className="h-full w-[60%] text-white flex  justify-center items-center flex-col gap-0 ">
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">Name</p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {name}
+                    </div>
+                  </div>
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">Price</p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {price}
+                    </div>
+                  </div>
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">Items</p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {itemCount}
+                    </div>
+                  </div>
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">
+                      Description
+                    </p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {description}
+                    </div>
+                  </div>
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">Location</p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {location}
+                    </div>
+                  </div>
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">Category</p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {category}
+                    </div>
+                  </div>
+                  <div className="w-full h-auto px-2 flex">
+                    <p className="border-2 border-white w-1/2 px-2">
+                      Product ID
+                    </p>
+                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
+                      {productid}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {viewedit && (
+          <div className=" flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
+            <div className="w-[45%] h-[80%] bg-white flex flex-col justify-between items-end p-2">
+              <button
+                className="cursor-pointer text-yellow-300 "
+                onClick={() => {
+                  setviewedit(false);
+                }}
+              >
+                <IoMdClose className="text-[25px] " />
+              </button>
+              <div className="w-full p-2 h-[90%] bg-[#FEAE1F] flex">
+                <div className="w-[40%] h-full flex items-center justify-center">
+                  <div
+                    className="h-[50%] w-full  border-4 border-white bg-cover bg-center bg-no-repeat "
+                    style={{
+                      backgroundImage: `url(http://localhost:5000/uploads/${image})`,
+                    }}
+                  ></div>
+                </div>
+                <div className="w-[60%] h-full  ">
+                  <div className="h-[90%] w-full text-white flex  justify-center items-center flex-col gap-0 ">
+                    <div className="w-full h-auto px-2 flex">
+                      <p className="border-2 border-white w-1/2 px-2">Name</p>
+                      <input
+                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        placeholder={name}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
+                    <div className="w-full h-auto px-2 flex">
+                      <p className="border-2 border-white w-1/2 px-2">Price</p>
+                      <input
+                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        placeholder={price}
+                        value={price}
+                        onChange={(e) => setPrcie(e.target.value)}
+                      />
+                    </div>
+                    <div className="w-full h-auto px-2 flex">
+                      <p className="border-2 border-white w-1/2 px-2">Items</p>
+                      <input
+                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        placeholder={itemCount}
+                        value={itemCount}
+                        onChange={(e) => setItemCount(e.target.value)}
+                      />
+                    </div>
+                    <div className="w-full h-auto px-2 flex">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Description
+                      </p>
+                      <input
+                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        placeholder={description}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                    </div>
+                    <div className="w-full h-auto px-2 flex">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Location
+                      </p>
+                      <input
+                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        placeholder={location}
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                      />
+                    </div>
+                    <div className="w-full h-auto px-2 flex">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Category
+                      </p>
+                      <select
+                        className="w-[50%] h-full bg-[#FFAD1B] focus:outline-none border-2 border-white"
+                        value={category} // Set default value
+                        onChange={(e) => setCategory(e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Product Category
+                        </option>
+                        <option value="shoes">Shoes</option>
+                        <option value="clothes">Clothes</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="accessories">Accessories</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="w-full h-[35px] grid grid-cols-2 gap-2">
+                    <button className="w-full h-full bg-black"></button>
+                    <button className="w-full h-full bg-black"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="relative h-[8%] w-full bg-black flex justify-between items-center">
           <div className="w-[20vw]  h-full flex justify-center gap-1 items-center bodrer-r-solid border-yellow-300 border-r-[1px]">
             <ShoppingCart size={35} className=" text-yellow-300" />
@@ -373,10 +557,52 @@ function Dashboard() {
                         }}
                       ></div>
 
-                      <div className="w-full h-[50%] bg-gray-200">
-                        <p>{post.price}</p>
-                        <p>{post.items}</p>
-                        <p>{post.category}</p>
+                      <div className="w-full h-[50%] px-2 flex flex-col  bg-gray-200">
+                        <div className="w-ful h-[75%] ">
+                          <p className="text-[18px] w-full">
+                            Category: {post.category}
+                          </p>
+                          <p className="text-[18px] w-full ">
+                            Price: {post.price}
+                          </p>
+                          <p className="text-[18px] w-full ">
+                            Items: {post.items}
+                          </p>
+                        </div>
+                        <div className="w-full h-[25%] grid gap-2 grid-cols-2">
+                          <button
+                            onClick={() => {
+                              setName(post.name);
+                              setDescription(post.description);
+                              setPrcie(post.price);
+                              setCategory(post.category);
+                              setItemCount(post.items);
+                              setLocation(post.location);
+                              setproductid(post.id);
+                              setImage(post.image);
+                              setviewmore(true);
+                            }}
+                            className="w-full h-full border-1 cursor-pointer bg-black border-yellow-300 rounded-lg text-yellow-300"
+                          >
+                            More
+                          </button>
+                          <button
+                            onClick={() => {
+                              setName(post.name);
+                              setDescription(post.description);
+                              setPrcie(post.price);
+                              setCategory(post.category);
+                              setItemCount(post.items);
+                              setLocation(post.location);
+                              setproductid(post.id);
+                              setImage(post.image);
+                              setviewedit(true);
+                            }}
+                            className="w-full cursor-pointer h-full border-2 bg-yellow-300 border-yellow rounded-lg"
+                          >
+                            Edit
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
