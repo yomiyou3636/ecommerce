@@ -4,7 +4,7 @@ import Product from "../models/product.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { upload, compressImage } from "../middleware/uploadMiddleware.js";
 import path from "path";
-import fs from "fs";
+import fs from "fs/promises"; // Correct import
 const router = express.Router();
 
 // Route to create a new product
@@ -202,56 +202,80 @@ router.get("/category/:categoryName", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 router.put(
-  "/update/:id", // Post ID as a parameter
+  "/update/:id",
   protect, // Ensure the user is authenticated
+  upload.single("image"), // Handle single image upload
+
   async (req, res) => {
-    // Extract the ID from the URL parameters
-    const { id } = req.params;
-
-    // Get the fields to update from the request body
-    const { name, description, price, items, category, location } = req.body;
-
-    // Validate that the ID exists (this is usually done by the MongoDB validation)
-    if (!id) {
-      return res.status(400).json({ message: "Product ID is required" });
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
     try {
-      // Find the post by its ID
-      const post = await Product.findOne({ id });
+      const { name, description, items, price, category, location } = req.body;
+      const productId = req.params.id; // Get the product ID from the URL
 
-      // If the post doesn't exist, return an error
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
+      // Find the product by ID
+      const product = await Product.findOne({ id: productId });
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
       }
 
-      // Check if the logged-in user is the owner of the post
-      if (post.seller.toString() !== req.user.id) {
-        return res
-          .status(403)
-          .json({ message: "You do not have permission to edit this post" });
+      // Update product fields
+      product.name = name;
+      product.description = description;
+      product.price = price;
+      product.items = items;
+      product.category = category;
+      product.location = location;
+
+      // Check if a new image was uploaded
+      if (req.file) {
+        // Compress the image using Sharp
+        await compressImage(req.file.path);
+        product.image = req.file.path; // Update image path
       }
 
-      // Update only the fields that are provided in the request body
-      if (name) post.name = name;
-      if (description) post.description = description;
-      if (price) post.price = price;
-      if (items) post.items = items;
-      if (category) post.category = category;
-      if (location) post.location = location;
+      // Save the updated product
+      const updatedProduct = await product.save();
 
-      // Save the updated post
-      const updatedPost = await post.save();
-
-      // Return the updated post
-      res.status(200).json(updatedPost);
+      res.status(200).json(updatedProduct);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+router.delete("/delete/:id", protect, async (req, res) => {
+  try {
+    console.log("req.params:", req.params);
+    const productId = req.params.id;
+    console.log("productId:", productId);
+    const deletedProduct = await Product.findOne({ id: productId });
 
+    if (!deletedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (deletedProduct.image) {
+      try {
+        await fs.unlink(deletedProduct.image);
+        console.log(`Image deleted: ${deletedProduct.image}`);
+      } catch (imageDeleteError) {
+        console.error("Error deleting image:", imageDeleteError);
+      }
+    }
+
+    await Product.deleteOne({ id: productId });
+
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 export default router;

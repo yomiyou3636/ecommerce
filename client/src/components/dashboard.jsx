@@ -1,4 +1,5 @@
 import React from "react";
+import Swal from "sweetalert2";
 import { ShoppingCart } from "lucide-react";
 import { User } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -129,15 +130,6 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    if (selectedFile) {
-      console.log(selectedFile.name);
-    }
-  }, [selectedFile]);
-  useEffect(() => {
-    fetchPosts(currentPage);
-  }, []);
-
   function handlePageNumber(direction) {
     let newPage = currentPage;
 
@@ -181,12 +173,100 @@ function Dashboard() {
       setError(err.message);
     }
   };
+  const editpost = async () => {
+    if (
+      !name ||
+      !price ||
+      !itemCount ||
+      !category ||
+      !description ||
+      !location
+    ) {
+      toast.error("Please fill in all fields and select an image.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("price", price);
+    formData.append("items", itemCount);
+    formData.append("category", category);
+    formData.append("description", description);
+    formData.append("location", location);
+    if (selectedFile != null) {
+      formData.append("image", selectedFile);
+    }
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.put(
+        `http://localhost:5000/product/update/${productid}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Log the response
+      console.log("Product posted successfully:", response.data);
+
+      toast.success("Post edited successfully!");
+    } catch {
+      toast.error("Edit failed");
+    }
+  };
+  const deletePost = async () => {
+    try {
+      if (!productid) {
+        console.error("Product ID is undefined!");
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+      });
+
+      if (result.isConfirmed) {
+        const token = localStorage.getItem("token");
+        const response = await axios.delete(
+          `http://localhost:5000/product/delete/${productid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("Post deleted successfully:", response.data);
+        Swal.fire("Deleted!", "Your post has been deleted.", "success");
+        return response.data;
+      } else {
+        Swal.fire("Cancelled", "Your post is safe :)", "error");
+        return null;
+      }
+    } catch (error) {
+      console.error(
+        "Error deleting post:",
+        error.response?.data || error.message
+      );
+      Swal.fire("Error!", "An error occurred during deletion.", "error");
+    }
+  };
 
   useEffect(() => {
     if (selectedFile) {
       console.log(selectedFile.name);
     }
   }, [selectedFile]);
+
   useEffect(() => {
     fetchPosts(currentPage);
     fetchUserData();
@@ -216,51 +296,57 @@ function Dashboard() {
                     }}
                   ></div>
                 </div>
-                <div className="h-full w-[60%] text-white flex  justify-center items-center flex-col gap-0 ">
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">Name</p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {name}
+                <div className="h-full w-[60%] text-white flex px-2  justify-center items-center flex-col gap-0 ">
+                  <div className="h-[50%] w-full bg-white p-2 text-black grid grid-rows-7">
+                    <div className="w-full h-full border-b-2 border-t-4 border-yellow-300  flex ">
+                      <p className="w-1/2 px-2">Name</p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {name}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">Price</p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {price}
+                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                      <p className="border-2 border-white w-1/2 px-2">Price</p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {price}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">Items</p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {itemCount}
+                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                      <p className="border-2 border-white w-1/2 px-2">Items</p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {itemCount}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">
-                      Description
-                    </p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {description}
+                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Description
+                      </p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {description}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">Location</p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {location}
+                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Location
+                      </p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {location}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">Category</p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {category}
+                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Category
+                      </p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {category}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-auto px-2 flex">
-                    <p className="border-2 border-white w-1/2 px-2">
-                      Product ID
-                    </p>
-                    <div className="border-2 border-white w-1/2 px-2 h-auto break-words whitespace-normal">
-                      {productid}
+                    <div className="w-full h-full border-t-2 border-b-4 border-yellow-300  flex ">
+                      <p className="border-2 border-white w-1/2 px-2">
+                        Product ID
+                      </p>
+                      <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
+                        {productid}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -279,72 +365,82 @@ function Dashboard() {
               >
                 <IoMdClose className="text-[25px] " />
               </button>
-              <div className="w-full p-2 h-[90%] bg-[#FEAE1F] flex">
-                <div className="w-[40%] h-full flex items-center justify-center">
+              <div className="w-full p-2  h-[90%] bg-[#FEAE1F] flex">
+                <div className="w-[40%] h-full flex items-center gap-2 flex-col justify-center">
                   <div
                     className="h-[50%] w-full  border-4 border-white bg-cover bg-center bg-no-repeat "
                     style={{
                       backgroundImage: `url(http://localhost:5000/uploads/${image})`,
                     }}
                   ></div>
+                  <button
+                    type="button"
+                    className="w-full cursor-pointer h-[40px] rounded-2xl  border-2 flex flex-col justify-center items-center"
+                    onClick={handleButtonClick}
+                  >
+                    Change Image
+                  </button>
+                  <input
+                    type="file"
+                    id="fileInput"
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                    accept="image/jpeg, image/png, image/gif,image/jpg"
+                  />
                 </div>
-                <div className="w-[60%] h-full  ">
-                  <div className="h-[90%] w-full text-white flex  justify-center items-center flex-col gap-0 ">
-                    <div className="w-full h-auto px-2 flex">
-                      <p className="border-2 border-white w-1/2 px-2">Name</p>
+                <div className="w-[60%] px-2 h-full  flex justify-center flex-col gap-2 items-center  ">
+                  <div className="h-[50%]  w-full p-2  bg-white text-black grid grid-rows-6 px-0 justify-center items-center flex-col ">
+                    <div className="w-full h-full flex border-amber-300 border-b-2 border-t-4  border-x-0  ">
+                      <p className="w-1/2 flex items-center  px-2 ">Name</p>
                       <input
-                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
                         placeholder={name}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-auto px-2 flex">
-                      <p className="border-2 border-white w-1/2 px-2">Price</p>
+                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                      <p className="w-1/2 flex items-center  px-2 ">Price</p>
                       <input
-                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
                         placeholder={price}
                         value={price}
                         onChange={(e) => setPrcie(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-auto px-2 flex">
-                      <p className="border-2 border-white w-1/2 px-2">Items</p>
+                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                      <p className="w-1/2 flex items-center  px-2 ">Items</p>
                       <input
-                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
                         placeholder={itemCount}
                         value={itemCount}
                         onChange={(e) => setItemCount(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-auto px-2 flex">
-                      <p className="border-2 border-white w-1/2 px-2">
+                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                      <p className="w-1/2 flex items-center  px-2 ">
                         Description
                       </p>
                       <input
-                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
                         placeholder={description}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-auto px-2 flex">
-                      <p className="border-2 border-white w-1/2 px-2">
-                        Location
-                      </p>
+                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                      <p className="w-1/2 flex items-center  px-2 ">Location</p>
                       <input
-                        className="border-2 focus:outline-none border-white w-1/2 px-2 h-auto break-words whitespace-normal "
+                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
                         placeholder={location}
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-auto px-2 flex">
-                      <p className="border-2 border-white w-1/2 px-2">
-                        Category
-                      </p>
+                    <div className="w-full h-full flex border-amber-300 border-t-2 border-b-4  border-x-0  ">
+                      <p className="w-1/2 flex items-center  px-2 ">Category</p>
                       <select
-                        className="w-[50%] h-full bg-[#FFAD1B] focus:outline-none border-2 border-white"
+                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
                         value={category} // Set default value
                         onChange={(e) => setCategory(e.target.value)}
                       >
@@ -358,9 +454,19 @@ function Dashboard() {
                       </select>
                     </div>
                   </div>
-                  <div className="w-full h-[35px] grid grid-cols-2 gap-2">
-                    <button className="w-full h-full bg-black"></button>
-                    <button className="w-full h-full bg-black"></button>
+                  <div className="w-full h-[40px]  grid grid-cols-2 gap-2">
+                    <button
+                      onClick={deletePost}
+                      className="w-full h-full  rounded-2xl bg-[#C8C7C6] text-[17px] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#AFACAC]"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={editpost}
+                      className="w-full h-full  rounded-2xl bg-black text-[17px] cursor-pointer text-yellow-300"
+                    >
+                      Submit
+                    </button>
                   </div>
                 </div>
               </div>
