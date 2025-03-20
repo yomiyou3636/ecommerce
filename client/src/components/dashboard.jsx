@@ -10,6 +10,16 @@ import { UserRoundCog } from "lucide-react";
 import { IoStatsChartSharp } from "react-icons/io5";
 import { IoLogOutOutline } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
+import { MdDashboard } from "react-icons/md";
+import { AiOutlineHistory } from "react-icons/ai";
+import { MdOutlinePostAdd } from "react-icons/md";
+import { MdOutlineProductionQuantityLimits } from "react-icons/md";
+import { BiSolidPurchaseTagAlt } from "react-icons/bi";
+import { MdOutlinePending } from "react-icons/md";
+import { FaCartFlatbed } from "react-icons/fa6";
+import { TbTruckDelivery } from "react-icons/tb";
+import { ImCancelCircle } from "react-icons/im";
+import { CiEdit } from "react-icons/ci";
 
 function Dashboard() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -29,24 +39,18 @@ function Dashboard() {
   const [viewprofile, setViewprofile] = useState(false);
   const [viewedit, setviewedit] = useState(false);
   const [viewmore, setviewmore] = useState(false);
+  const [myviewpost, setviewmypost] = useState(false);
   const [productid, setproductid] = useState(null);
-  // const [moreuser, setmoreuser] = useState(null);
-  // const [morename, setmorename] = useState(null);
-  // const [moredescription, setmoredescription] = useState(null);
-  // const [moreitems, setmoreitems] = useState(null);
-  // const [moreprice, setMoreUser] = useState(null);
-  // const [morelocation, setMoreUser] = useState(null);
-  // const [moreavailability, setMoreUser] = useState(null);
-  // const [morecategory, setMoreUser] = useState(null);
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
 
-  const handleButtonClick = () => {
+  const handlefileselect = () => {
     document.getElementById("fileInput").click();
   };
 
+  // handle product post
   const handlePost = async (e) => {
     e.preventDefault();
     if (
@@ -89,10 +93,8 @@ function Dashboard() {
         }
       );
 
-      // Log the response
       console.log("Product posted successfully:", response.data);
 
-      // Reset the form state
       setName("");
       setPrcie("");
       setItemCount("");
@@ -107,7 +109,7 @@ function Dashboard() {
       alert("Error posting product. Please try again.");
     }
   };
-
+  //fetch products posted by logged in user
   const fetchPosts = async (page) => {
     try {
       const token = localStorage.getItem("token");
@@ -129,7 +131,7 @@ function Dashboard() {
       console.error("Error fetching posts:", error);
     }
   };
-
+  // pagination hanlde while fetching data
   function handlePageNumber(direction) {
     let newPage = currentPage;
 
@@ -151,6 +153,7 @@ function Dashboard() {
       nextButton.disabled = newPage === totalPages;
     }
   }
+  // fetch logged in user data
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -173,6 +176,8 @@ function Dashboard() {
       setError(err.message);
     }
   };
+
+  // edit existing post
   const editpost = async () => {
     if (
       !name ||
@@ -209,7 +214,6 @@ function Dashboard() {
         }
       );
 
-      // Log the response
       console.log("Product posted successfully:", response.data);
 
       toast.success("Post edited successfully!");
@@ -217,6 +221,7 @@ function Dashboard() {
       toast.error("Edit failed");
     }
   };
+  // deleted an existing post
   const deletePost = async () => {
     try {
       if (!productid) {
@@ -245,11 +250,11 @@ function Dashboard() {
           }
         );
 
-        console.log("Post deleted successfully:", response.data);
+        // console.log("Post deleted successfully:", response.data);
         Swal.fire("Deleted!", "Your post has been deleted.", "success");
         return response.data;
       } else {
-        Swal.fire("Cancelled", "Your post is safe :)", "error");
+        // Swal.fire("Cancelled", "Your post is safe :)", "error");
         return null;
       }
     } catch (error) {
@@ -268,7 +273,6 @@ function Dashboard() {
   }, [selectedFile]);
 
   useEffect(() => {
-    fetchPosts(currentPage);
     fetchUserData();
   }, []);
   return (
@@ -277,17 +281,17 @@ function Dashboard() {
 
       <div className="w-[100vw] h-[100vh]  flex flex-col relative  ">
         {viewmore && (
-          <div className=" flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
+          <div className="  flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
             <div className="w-[45%] h-[80%] bg-white flex flex-col justify-between items-end p-2">
               <button
-                className="cursor-pointer text-yellow-300 "
+                className="cursor-pointer text-[#1ecbe1] "
                 onClick={() => {
                   setviewmore(false);
                 }}
               >
                 <IoMdClose className="text-[25px] " />
               </button>
-              <div className="w-full p-2 h-[90%] bg-[#FEAE1F] flex">
+              <div className="w-full p-2 h-[90%] bg-[#1ecbe1] flex">
                 <div className="w-[40%] h-full flex items-center justify-center">
                   <div
                     className="h-[50%] w-full  border-4 border-white bg-cover bg-center bg-no-repeat "
@@ -298,25 +302,25 @@ function Dashboard() {
                 </div>
                 <div className="h-full w-[60%] text-white flex px-2  justify-center items-center flex-col gap-0 ">
                   <div className="h-[50%] w-full bg-white p-2 text-black grid grid-rows-7">
-                    <div className="w-full h-full border-b-2 border-t-4 border-yellow-300  flex ">
+                    <div className="w-full h-full border-b-2 border-t-4 border-[#1ecbe1]  flex ">
                       <p className="w-1/2 px-2">Name</p>
                       <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
                         {name}
                       </div>
                     </div>
-                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                    <div className="w-full h-full border-y-2 border-[#1ecbe1]  flex ">
                       <p className="border-2 border-white w-1/2 px-2">Price</p>
                       <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
                         {price}
                       </div>
                     </div>
-                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                    <div className="w-full h-full border-y-2 border-[#1ecbe1]  flex ">
                       <p className="border-2 border-white w-1/2 px-2">Items</p>
                       <div className="border-l-2 border-gray-500 w-1/2 px-2 h-auto break-words whitespace-normal">
                         {itemCount}
                       </div>
                     </div>
-                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                    <div className="w-full h-full border-y-2 border-[#1ecbe1]  flex ">
                       <p className="border-2 border-white w-1/2 px-2">
                         Description
                       </p>
@@ -324,7 +328,7 @@ function Dashboard() {
                         {description}
                       </div>
                     </div>
-                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                    <div className="w-full h-full border-y-2 border-[#1ecbe1]  flex ">
                       <p className="border-2 border-white w-1/2 px-2">
                         Location
                       </p>
@@ -332,7 +336,7 @@ function Dashboard() {
                         {location}
                       </div>
                     </div>
-                    <div className="w-full h-full border-y-2 border-yellow-300  flex ">
+                    <div className="w-full h-full border-y-2 border-[#1ecbe1]  flex ">
                       <p className="border-2 border-white w-1/2 px-2">
                         Category
                       </p>
@@ -340,7 +344,7 @@ function Dashboard() {
                         {category}
                       </div>
                     </div>
-                    <div className="w-full h-full border-t-2 border-b-4 border-yellow-300  flex ">
+                    <div className="w-full h-full border-t-2 border-b-4 border-[#1ecbe1]  flex ">
                       <p className="border-2 border-white w-1/2 px-2">
                         Product ID
                       </p>
@@ -358,14 +362,14 @@ function Dashboard() {
           <div className=" flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
             <div className="w-[45%] h-[80%] bg-white flex flex-col justify-between items-end p-2">
               <button
-                className="cursor-pointer text-yellow-300 "
+                className="cursor-pointer text-[#1ecbe1] "
                 onClick={() => {
                   setviewedit(false);
                 }}
               >
                 <IoMdClose className="text-[25px] " />
               </button>
-              <div className="w-full p-2  h-[90%] bg-[#FEAE1F] flex">
+              <div className="w-full p-2  h-[90%] bg-[#1ecbe1] flex">
                 <div className="w-[40%] h-full flex items-center gap-2 flex-col justify-center">
                   <div
                     className="h-[50%] w-full  border-4 border-white bg-cover bg-center bg-no-repeat "
@@ -376,7 +380,7 @@ function Dashboard() {
                   <button
                     type="button"
                     className="w-full cursor-pointer h-[40px] rounded-2xl  border-2 flex flex-col justify-center items-center"
-                    onClick={handleButtonClick}
+                    onClick={handlefileselect}
                   >
                     Change Image
                   </button>
@@ -390,7 +394,7 @@ function Dashboard() {
                 </div>
                 <div className="w-[60%] px-2 h-full  flex justify-center flex-col gap-2 items-center  ">
                   <div className="h-[50%]  w-full p-2  bg-white text-black grid grid-rows-6 px-0 justify-center items-center flex-col ">
-                    <div className="w-full h-full flex border-amber-300 border-b-2 border-t-4  border-x-0  ">
+                    <div className="w-full h-full flex border-[#1ecbe1] border-b-2 border-t-4  border-x-0  ">
                       <p className="w-1/2 flex items-center  px-2 ">Name</p>
                       <input
                         className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
@@ -399,7 +403,7 @@ function Dashboard() {
                         onChange={(e) => setName(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
                       <p className="w-1/2 flex items-center  px-2 ">Price</p>
                       <input
                         className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
@@ -408,7 +412,7 @@ function Dashboard() {
                         onChange={(e) => setPrcie(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
                       <p className="w-1/2 flex items-center  px-2 ">Items</p>
                       <input
                         className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
@@ -417,7 +421,7 @@ function Dashboard() {
                         onChange={(e) => setItemCount(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
                       <p className="w-1/2 flex items-center  px-2 ">
                         Description
                       </p>
@@ -428,7 +432,7 @@ function Dashboard() {
                         onChange={(e) => setDescription(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-full flex border-y-amber-300 border-2 border-x-0  ">
+                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
                       <p className="w-1/2 flex items-center  px-2 ">Location</p>
                       <input
                         className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
@@ -437,7 +441,7 @@ function Dashboard() {
                         onChange={(e) => setLocation(e.target.value)}
                       />
                     </div>
-                    <div className="w-full h-full flex border-amber-300 border-t-2 border-b-4  border-x-0  ">
+                    <div className="w-full h-full flex border-[#1ecbe1] border-t-2 border-b-4  border-x-0  ">
                       <p className="w-1/2 flex items-center  px-2 ">Category</p>
                       <select
                         className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
@@ -457,13 +461,13 @@ function Dashboard() {
                   <div className="w-full h-[40px]  grid grid-cols-2 gap-2">
                     <button
                       onClick={deletePost}
-                      className="w-full h-full  rounded-2xl bg-[#C8C7C6] text-[17px] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#AFACAC]"
+                      className="w-full h-full  rounded-2xl border-2 border-black bg-white text-[17px] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#AFACAC]"
                     >
                       Delete
                     </button>
                     <button
                       onClick={editpost}
-                      className="w-full h-full  rounded-2xl bg-black text-[17px] cursor-pointer text-yellow-300"
+                      className="w-full h-full  rounded-2xl bg-black text-[17px] cursor-pointer text-[#1ecbe1]"
                     >
                       Submit
                     </button>
@@ -473,11 +477,14 @@ function Dashboard() {
             </div>
           </div>
         )}
-
-        <div className="relative h-[8%] w-full bg-black flex justify-between items-center">
-          <div className="w-[20vw]  h-full flex justify-center gap-1 items-center bodrer-r-solid border-yellow-300 border-r-[1px]">
-            <ShoppingCart size={35} className=" text-yellow-300" />
-            <h1 className="text-[20px] text-white">Ethio-Carts</h1>
+        {/* top navingation bar  */}
+        <div className="relative h-[10%] w-full bg-[#F5FCFC] border-b-1 border-[#1ecbe1] flex justify-between items-center">
+          <div className="w-[20vw]  h-full flex justify-center gap-1 items-center bodrer-r-solid border-[#1ecbe1] border-r-[1px]">
+            <ShoppingCart
+              size={45}
+              className=" text-[#1ecbe1] border-2 p-2 rounded-full bg-black"
+            />
+            <h1 className="text-[20px] ">Ethio-Carts</h1>
           </div>
 
           <div className="w-[15vw] cursor-pointer  gap-2  h-full flex justify-center   items-center ">
@@ -485,14 +492,14 @@ function Dashboard() {
               onClick={() => {
                 setViewprofile(true);
               }}
-              className="w-[100px] cursor-pointer rounded-sm h-[38px] border-yellow-200 flex  justify-center items-center text-yellow-200 border-1"
+              className="w-[100px] cursor-pointer rounded-sm h-[38px] bg-[#1ecbe1] flex  justify-center items-center "
             >
-              <User size={20} className=" text-yellow-300" />
+              <User size={20} className=" text-black" />
               Profile
             </button>
           </div>
           {viewprofile && (
-            <div className="absolute overflow-hidden border-1 border-gray-300 pt-2 w-[23%] h-[60vh] z-45 bg-yellow-300 top-[8vh] rounded-2xl left-[76vw] flex items-center flex-col">
+            <div className="absolute overflow-hidden border-1 border-[#F5FCFC] pt-2 w-[23%] h-[60vh] z-45 bg-[#1ecbe1] top-[10vh] rounded-2xl left-[76vw] flex items-center flex-col">
               <IoMdClose
                 className="text-[25px] absolute top-[3%] left-[90%] cursor-pointer"
                 onClick={() => {
@@ -501,7 +508,7 @@ function Dashboard() {
               />
               <div className="w-full h-[45%] flex flex-col  justify-center items-center ">
                 <div className=" p-4 bg-gray-900 rounded-full border-4 border-white flex justify-center items-center">
-                  <ShoppingCart size={30} className=" text-yellow-300" />
+                  <ShoppingCart size={30} className=" text-[#1ecbe1]" />
                 </div>
                 <p className="text-[23px] font-semibold ">Hi, {userName}</p>
                 <h1>{userEmail}</h1>
@@ -522,14 +529,14 @@ function Dashboard() {
             </div>
           )}
         </div>
-
-        <div className="w-[100vw] h-[92vh] flex ">
-          <div className="w-full h-[92vh] hidden  z-50 inset-0 backdrop-blur-lg bg-white/30 absolute justify-center items-center  ">
-            <form className="w-[45%] h-[90%] bg-[#FFAD1B] shadow-gray-500 shadow-md p-4 rounded-3xl  flex flex-col justify-start items-center  ">
+        {/* {viewaddpost &&( */}
+        <div className="w-[100vw] h-[100vh] flex ">
+          <div className="w-full h-[100vh]  hidden z-50 inset-0 backdrop-blur-lg bg-white/30 absolute flex justify-center items-center  ">
+            <form className="w-[45%] h-[90%] bg-[#1ecbe1] shadow-gray-500 shadow-md p-4 rounded-3xl  flex flex-col justify-start items-center  ">
               <button
                 type="button"
                 className="w-full h-[30%] rounded-2xl border-dashed border-2 flex flex-col justify-center items-center"
-                onClick={handleButtonClick}
+                onClick={handlefileselect}
               >
                 <Plus size={50}></Plus>
 
@@ -646,94 +653,145 @@ function Dashboard() {
               </div>
             </form>
           </div>
-          <div className="w-[20%] h-full bg-black border-t-1 border-r-1 border-yellow-300"></div>
+          {/* )} */}
+          {/* sidebar  */}
+          <div className="w-[20%] h-full  gap-2 flex-col border-t-1  border-r-1 border-[#1ecbe1] bg-[#1ecbe1] p-2 flex ">
+            <div className="w-full h-[80%]  grid grid-rows-8 gap-2">
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <MdDashboard className="text-[28px] text-[#1ecbe1]" />
+                Dashboard
+              </button>
+              <button
+                onClick={() => {
+                  setviewmypost(true);
+                  fetchPosts(currentPage);
+                }}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
+                <MdOutlineProductionQuantityLimits className="text-[28px] text-[#1ecbe1]" />
+                My Post
+              </button>
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <MdOutlinePostAdd className="text-[28px] text-[#1ecbe1]" />
+                Post product
+              </button>
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <FaCartFlatbed className="text-[28px] text-[#1ecbe1]" />
+                All Orders
+              </button>
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <MdOutlinePending className="text-[28px] text-[#1ecbe1]" />
+                Pending Order
+              </button>
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <TbTruckDelivery className="text-[28px] text-[#1ecbe1]" />
+                Delivered Order
+              </button>
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <ImCancelCircle className="text-[25px] text-[#1ecbe1]" />
+                Cancelled Order
+              </button>
+              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+                <AiOutlineHistory className="text-[28px] text-[#1ecbe1]" />
+                History
+              </button>
+            </div>
+            <div className="w-full h-[20%] flex justify-center items-center  ">
+              <button className="w-[70%] h-[50%] bg-black text-white rounded-2xl flex justify-center items-center gap-2">
+                <IoLogOutOutline className="text-[30px] text-whilte " />
+                Logout
+              </button>
+            </div>
+          </div>
           <div className="w-[80%] h-full ">
-            <div className="w-full  h-full  flex flex-col p-2 ">
-              <div className="w-full h-[90%]  grid grid-cols-4 gap-2 grid-rows-2">
-                {posts.length > 0 ? (
-                  posts.map((post) => (
-                    <div
-                      key={post._id}
-                      className=" w-full h-full rounded-md border-4 border-gray-200"
-                    >
+            {myviewpost && (
+              <div className="w-full  h-full  flex flex-col p-2 ">
+                <div className="w-full h-[90%]  grid grid-cols-4 gap-2 grid-rows-2">
+                  {posts.length > 0 ? (
+                    posts.map((post) => (
                       <div
-                        className="w-full h-[50%] bg-cover bg-center bg-no-repeat "
-                        style={{
-                          backgroundImage: `url(http://localhost:5000/uploads/${post.image})`,
-                        }}
-                      ></div>
+                        key={post._id}
+                        className=" w-full h-full rounded-md border-4 border-[#F5FCFC]"
+                      >
+                        <div
+                          className="w-full h-[50%] bg-cover bg-center bg-no-repeat "
+                          style={{
+                            backgroundImage: `url(http://localhost:5000/uploads/${post.image})`,
+                          }}
+                        ></div>
 
-                      <div className="w-full h-[50%] px-2 flex flex-col  bg-gray-200">
-                        <div className="w-ful h-[75%] ">
-                          <p className="text-[18px] w-full">
-                            Category: {post.category}
-                          </p>
-                          <p className="text-[18px] w-full ">
-                            Price: {post.price}
-                          </p>
-                          <p className="text-[18px] w-full ">
-                            Items: {post.items}
-                          </p>
-                        </div>
-                        <div className="w-full h-[25%] grid gap-2 grid-cols-2">
-                          <button
-                            onClick={() => {
-                              setName(post.name);
-                              setDescription(post.description);
-                              setPrcie(post.price);
-                              setCategory(post.category);
-                              setItemCount(post.items);
-                              setLocation(post.location);
-                              setproductid(post.id);
-                              setImage(post.image);
-                              setviewmore(true);
-                            }}
-                            className="w-full h-full border-1 cursor-pointer bg-black border-yellow-300 rounded-lg text-yellow-300"
-                          >
-                            More
-                          </button>
-                          <button
-                            onClick={() => {
-                              setName(post.name);
-                              setDescription(post.description);
-                              setPrcie(post.price);
-                              setCategory(post.category);
-                              setItemCount(post.items);
-                              setLocation(post.location);
-                              setproductid(post.id);
-                              setImage(post.image);
-                              setviewedit(true);
-                            }}
-                            className="w-full cursor-pointer h-full border-2 bg-yellow-300 border-yellow rounded-lg"
-                          >
-                            Edit
-                          </button>
+                        <div className="w-full h-[50%]  flex flex-col  bg-[#C6F2F6]">
+                          <div className="w-full  pb-1 h-[65%] px-2">
+                            <p className="text-[18px] w-full">
+                              Name: {post.name}
+                            </p>
+                            <p className="text-[18px] w-full ">
+                              Price: {post.price}
+                            </p>
+                            <p className="text-[18px] w-full ">
+                              Items: {post.items}
+                            </p>
+                          </div>
+                          <div className="w-full h-[35%] grid gap-2 p-1 bg-[#C6F2F6] grid-cols-2">
+                            <button
+                              onClick={() => {
+                                setName(post.name);
+                                setDescription(post.description);
+                                setPrcie(post.price);
+                                setCategory(post.category);
+                                setItemCount(post.items);
+                                setLocation(post.location);
+                                setproductid(post.id);
+                                setImage(post.image);
+                                setviewmore(true);
+                              }}
+                              className="w-full h-full  cursor-pointer bg-black  rounded-lg text-[#1ecbe1]"
+                            >
+                              More...
+                            </button>
+                            <button
+                              onClick={() => {
+                                setName(post.name);
+                                setDescription(post.description);
+                                setPrcie(post.price);
+                                setCategory(post.category);
+                                setItemCount(post.items);
+                                setLocation(post.location);
+                                setproductid(post.id);
+                                setImage(post.image);
+                                setviewedit(true);
+                              }}
+                              className="w-full cursor-pointer h-full hover:bg-[#1ecbe1] transition-all duration-150 flex justify-center items-center gap-2 bg-white  rounded-lg"
+                            >
+                              <CiEdit className="text-[20px]" /> Edit
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No posts found.</p>
-                )}
-                {/* You could also add pagination controls here */}
+                    ))
+                  ) : (
+                    <p>No posts found.</p>
+                  )}
+                  {/* You could also add pagination controls here */}
+                </div>
+                <div className="w-full h-[10%] gap-2 flex p-2">
+                  <button
+                    id="previous"
+                    className="w-[50%] bg-[#1ecbe1] text-[16px] cursor-pointer"
+                    onClick={() => handlePageNumber("p")}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    id="next"
+                    className="w-[50%] bg-black text-white text-[16px] cursor-pointer"
+                    onClick={() => handlePageNumber("n")}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-              <div className="w-full h-[10%] gap-2 flex p-2">
-                <button
-                  id="previous"
-                  className="w-[50%] bg-yellow-400 text-[16px] cursor-pointer"
-                  onClick={() => handlePageNumber("p")}
-                >
-                  Previous
-                </button>
-                <button
-                  id="next"
-                  className="w-[50%] bg-black text-white text-[16px] cursor-pointer"
-                  onClick={() => handlePageNumber("n")}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
