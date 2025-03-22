@@ -41,7 +41,7 @@ function Login() {
       <div className=" w-[100vw] h-[100vh] bg-[#white] flex justify-center items-center flex-col">
         <div className="p-2 w-[27vw] h-[80vh] flex justify-center items-start  flex-col ">
           <div className="w-full h-[10%]  flex justify-center items-center gap-2">
-            <ShoppingCart size={35} className=" text-[#FFD915]" />
+            <ShoppingCart size={35} className=" text-[#1ecbe1]" />
             <h2 className="text-[rgb(0,0,0)] text-[20px]">Ethio-Cart</h2>
           </div>
           <form
@@ -58,7 +58,7 @@ function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
               type="email"
-              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-yellow-300 "
+              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-[#1ecbe1] "
             ></input>
             <label
               className="font-sans text-[15px]  font-semibold"
@@ -72,11 +72,11 @@ function Login() {
               required
               name="password"
               type="password"
-              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-yellow-300 "
+              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-[#1ecbe1] "
             ></input>
             <button
               type="submit"
-              className="w-full h-[35px] bg-[#FFD915] rounded-lg  font-semibold text-[17px] cursor-pointer hover:bg-yellow-400"
+              className="w-full h-[35px] bg-[#1ecbe1] rounded-lg  font-semibold text-[17px] cursor-pointer hover:bg-[#229cae]"
             >
               {loading ? "Logging in..." : "Continue"}
             </button>
@@ -102,7 +102,7 @@ function Login() {
             </div>
           </form>
         </div>
-        <div className="flex justify-center items-center gap-3 h-[20vh] w-full    bg-[#FFD915] flex-col ">
+        <div className="flex justify-center items-center gap-3 h-[20vh] w-full    bg-[#1ecbe1] flex-col ">
           <div className="w-full h-[50%]  gap-4 flex justify-center items-end">
             <p className="text-[15px] font-sans text-gray-800 hover:underline cursor-pointer">
               Terms and Conditions

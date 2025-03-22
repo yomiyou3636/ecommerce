@@ -49,11 +49,11 @@ function Signup() {
         {welcomePage && (
           <div className="absolute   z-50 h-full w-full flex justify-center items-center bg-white/30 backdrop-blur-md">
             <div
-              style={{ backgroundImage: 'url("../images/bg3.jpg")' }}
+              style={{ backgroundImage: 'url("../images/bg11.jpg")' }}
               className="w-[50%] h-2/3 gap-4 bg-white rounded-md flex-col bg-no-repeat pl-8 p-3 bg-cover bg-center  flex justify-start items-center"
             >
               <div className="w-auto h-auto p-6 bg-gray-900 rounded-full border-4 border-white flex justify-center items-center">
-                <ShoppingCart size={45} className=" text-yellow-300" />
+                <ShoppingCart size={45} className=" text-[#1ecbe1]" />
               </div>
               <div className="w-full h-auto flex gap-4 flex-col justify-center items-start">
                 <p className="text-[30px] w-[60%] text-white font-semibold">
@@ -66,7 +66,7 @@ function Signup() {
                 </p>
                 <button
                   onClick={toDashoard}
-                  className="w-[40%] transition-all duration-100 h-[50px] rounded-3xl border-white border-2 text-white text-[18px] hover:cursor-pointer hover:bg-yellow-700"
+                  className="w-[40%] transition-all duration-100 h-[50px] rounded-3xl border-white border-2 text-white text-[18px] hover:cursor-pointer hover:bg-blue-600"
                 >
                   Shop Now
                 </button>
@@ -76,7 +76,7 @@ function Signup() {
         )}
         <div className="p-2 w-[27vw] h-[80vh] flex justify-center items-start  flex-col ">
           <div className="w-full h-[10%]  flex justify-center items-center gap-2">
-            <ShoppingCart size={35} className=" text-[#FFD915]" />
+            <ShoppingCart size={35} className=" text-[#1ecbe1]" />
             <h2 className="text-[rgb(0,0,0)] text-[20px]">Ethio-Cart</h2>
           </div>
           <form
@@ -93,7 +93,7 @@ function Signup() {
               onChange={(e) => setEmail(e.target.value)}
               required
               type="email"
-              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-yellow-300 "
+              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-[#1ecbe1] "
             ></input>
             <label className="font-sans text-[15px]  font-semibold" for="name">
               Type your Name
@@ -104,7 +104,7 @@ function Signup() {
               onChange={(e) => setName(e.target.value)}
               required
               type="text"
-              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-yellow-300 "
+              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-[#1ecbe1] "
             ></input>
             <label
               className="font-sans text-[15px]  font-semibold"
@@ -118,11 +118,11 @@ function Signup() {
               required
               name="password"
               type="password"
-              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-yellow-300 "
+              className="w-full h-[35px] border-1 rounded-md border-gray-500 boder-soild pl-3  focus:border-2  focus:outline-[#1ecbe1] "
             ></input>
             <button
               type="submit"
-              className="w-full h-[35px] bg-[#FFD915] rounded-lg  font-semibold text-[17px] cursor-pointer hover:bg-yellow-400"
+              className="w-full h-[35px] bg-[#1ecbe1] rounded-lg  font-semibold text-[17px] cursor-pointer hover:bg-[#229cae]"
             >
               {loading ? "Signing up..." : "Sign Up"}
             </button>
@@ -145,7 +145,7 @@ function Signup() {
             </div>
           </form>
         </div>
-        <div className="flex justify-center items-center gap-3 h-[20vh] w-full    bg-[#FFD915] flex-col ">
+        <div className="flex justify-center items-center gap-3 h-[20vh] w-full    bg-[#1ecbe1] flex-col ">
           <div className="w-full h-[50%]  gap-4 flex justify-center items-end">
             <p className="text-[15px] font-sans text-gray-800 hover:underline cursor-pointer">
               Terms and Conditions

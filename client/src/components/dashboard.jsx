@@ -39,7 +39,7 @@ function Dashboard() {
   const [viewprofile, setViewprofile] = useState(false);
   const [viewedit, setviewedit] = useState(false);
   const [viewmore, setviewmore] = useState(false);
-  const [myviewpost, setviewmypost] = useState(false);
+  const [activeView, setActiveView] = useState("dashboard");
   const [productid, setproductid] = useState(null);
 
   const handleFileChange = (event) => {
@@ -531,139 +531,21 @@ function Dashboard() {
         </div>
         {/* {viewaddpost &&( */}
         <div className="w-[100vw] h-[100vh] flex ">
-          <div className="w-full h-[100vh]  hidden z-50 inset-0 backdrop-blur-lg bg-white/30 absolute flex justify-center items-center  ">
-            <form className="w-[45%] h-[90%] bg-[#1ecbe1] shadow-gray-500 shadow-md p-4 rounded-3xl  flex flex-col justify-start items-center  ">
-              <button
-                type="button"
-                className="w-full h-[30%] rounded-2xl border-dashed border-2 flex flex-col justify-center items-center"
-                onClick={handlefileselect}
-              >
-                <Plus size={50}></Plus>
-
-                {selectedFile && (
-                  <p className="text-center font-sans text-[17px]">
-                    {/* Selected file: {selectedFile.name} */}
-                    Change Image
-                  </p>
-                )}
-                {!selectedFile && (
-                  <p className="text-center font-sans text-[17px]">
-                    Upload Product Image
-                  </p>
-                )}
-              </button>
-              <div className="w-full h-[70%]  flex justify-between items-center flex-wrap ">
-                <input
-                  type="file"
-                  id="fileInput"
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                  accept="image/jpeg, image/png, image/gif,image/jpg"
-                />
-
-                <div className="w-[48%] h-[50px]">
-                  <label className="h-[10%]">Product name</label>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  ></input>
-                </div>
-                <div className="w-[48%] h-[50px]">
-                  <label className="h-[10%]">Product Price</label>
-                  <input
-                    type="text"
-                    placeholder="Price"
-                    className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                    value={price}
-                    onChange={(e) => setPrcie(e.target.value)}
-                  ></input>
-                </div>
-                <div className="w-[48%] h-[50px]">
-                  <label className="h-[10%]">Number of Items</label>
-                  <input
-                    type="text"
-                    placeholder="count"
-                    className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                    value={itemCount}
-                    onChange={(e) => setItemCount(e.target.value)}
-                  ></input>
-                </div>
-                <div className="w-[48%] h-[50px]">
-                  <label className="h-[10%]">Loctaion</label>
-                  <input
-                    type="text"
-                    placeholder="location"
-                    className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  ></input>
-                </div>
-                <div className="w-[48%] h-[50px]">
-                  <label className="h-[10%]">Select Category</label>
-                  <select
-                    className="w-full h-[90%] bg-white"
-                    value={category || ""} // Set default value
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Product Category
-                    </option>
-                    <option value="shoes">Shoes</option>
-                    <option value="clothes">Clothes</option>
-                    <option value="electronics">Electronics</option>
-                    <option value="accessories">Accessories</option>
-                  </select>
-                </div>
-                <div className="w-[48%] h-[50px]">
-                  <label className="h-[10%]">Delivery option</label>
-                  <select
-                    className="w-full h-[90%] bg-white"
-                    value={category || ""} // Set default value
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Delivery Option
-                    </option>
-                    <option value="shoes">No delivery</option>
-                    <option value="clothes">Self-Delivery</option>
-                    <option value="electronics">Ethio-cart delivery</option>
-                  </select>
-                </div>
-
-                <div className="h-[50px] w-full">
-                  <label className="h-[10%]">Product Description</label>
-                  <textarea
-                    placeholder="Description"
-                    className="pl-2 w-full bg-white h-[90%]"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  ></textarea>
-                </div>
-                <button
-                  type="submit"
-                  onClick={handlePost}
-                  placeholder="Product name"
-                  className="pl-2 w-full rounded-lg h-[50px] text-[18px] text-white hover:bg-gray-900 transition-all duration-100 cursor-pointer font-semibold bg-black"
-                >
-                  Post Product
-                </button>
-              </div>
-            </form>
-          </div>
-          {/* )} */}
           {/* sidebar  */}
           <div className="w-[20%] h-full  gap-2 flex-col border-t-1  border-r-1 border-[#1ecbe1] bg-[#1ecbe1] p-2 flex ">
             <div className="w-full h-[80%]  grid grid-rows-8 gap-2">
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+              <button
+                onClick={() => {
+                  setActiveView("dashboard");
+                }}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
                 <MdDashboard className="text-[28px] text-[#1ecbe1]" />
                 Dashboard
               </button>
               <button
                 onClick={() => {
-                  setviewmypost(true);
+                  setActiveView("mypost");
                   fetchPosts(currentPage);
                 }}
                 className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
@@ -671,7 +553,11 @@ function Dashboard() {
                 <MdOutlineProductionQuantityLimits className="text-[28px] text-[#1ecbe1]" />
                 My Post
               </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+              <button
+                addpost
+                onClick={() => setActiveView("addpost")}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
                 <MdOutlinePostAdd className="text-[28px] text-[#1ecbe1]" />
                 Post product
               </button>
@@ -704,7 +590,7 @@ function Dashboard() {
             </div>
           </div>
           <div className="w-[80%] h-full ">
-            {myviewpost && (
+            {activeView === "mypost" && (
               <div className="w-full  h-full  flex flex-col p-2 ">
                 <div className="w-full h-[90%]  grid grid-cols-4 gap-2 grid-rows-2">
                   {posts.length > 0 ? (
@@ -772,7 +658,6 @@ function Dashboard() {
                   ) : (
                     <p>No posts found.</p>
                   )}
-                  {/* You could also add pagination controls here */}
                 </div>
                 <div className="w-full h-[10%] gap-2 flex p-2">
                   <button
@@ -790,6 +675,135 @@ function Dashboard() {
                     Next
                   </button>
                 </div>
+              </div>
+            )}
+            {activeView === "addpost" && (
+              <div className="w-full h-full  flex justify-center items-center ">
+                <form className="w-[70%] h-[90%] bg-[#1ecbe1]  p-4  flex flex-col justify-start items-center  ">
+                  <button
+                    type="button"
+                    className="w-full h-[30%] bg-[#C6F2F6] rounded-2xl border-dashed border-2 flex flex-col justify-center items-center"
+                    onClick={handlefileselect}
+                  >
+                    <Plus size={50}></Plus>
+
+                    {selectedFile && (
+                      <p className="text-center font-sans text-[17px]">
+                        {/* Selected file: {selectedFile.name} */}
+                        Change Image
+                      </p>
+                    )}
+                    {!selectedFile && (
+                      <p className="text-center font-sans text-[17px]">
+                        Upload Product Image
+                      </p>
+                    )}
+                  </button>
+                  <div className="w-full h-[70%]  flex justify-between items-center flex-wrap ">
+                    <input
+                      type="file"
+                      id="fileInput"
+                      style={{ display: "none" }}
+                      onChange={handleFileChange}
+                      accept="image/jpeg, image/png, image/gif,image/jpg"
+                    />
+
+                    <div className="w-[48%] h-[50px]">
+                      <label className="h-[10%]">Product name</label>
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      ></input>
+                    </div>
+                    <div className="w-[48%] h-[50px]">
+                      <label className="h-[10%]">Product Price</label>
+                      <input
+                        type="text"
+                        placeholder="Price"
+                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
+                        value={price}
+                        onChange={(e) => setPrcie(e.target.value)}
+                      ></input>
+                    </div>
+                    <div className="w-[48%] h-[50px]">
+                      <label className="h-[10%]">Number of Items</label>
+                      <input
+                        type="text"
+                        placeholder="count"
+                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
+                        value={itemCount}
+                        onChange={(e) => setItemCount(e.target.value)}
+                      ></input>
+                    </div>
+                    <div className="w-[48%] h-[50px]">
+                      <label className="h-[10%]">Loctaion</label>
+                      <input
+                        type="text"
+                        placeholder="location"
+                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                      ></input>
+                    </div>
+                    <div className="w-[48%] h-[50px]">
+                      <label className="h-[10%]">Select Category</label>
+                      <select
+                        className="w-full h-[90%] bg-white"
+                        value={category || ""} // Set default value
+                        onChange={(e) => setCategory(e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Product Category
+                        </option>
+                        <option value="shoes">Shoes</option>
+                        <option value="clothes">Clothes</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="accessories">Accessories</option>
+                      </select>
+                    </div>
+                    <div className="w-[48%] h-[50px]">
+                      <label className="h-[10%]">Delivery option</label>
+                      <select
+                        className="w-full h-[90%] bg-white"
+                        value={category || ""} // Set default value
+                        onChange={(e) => setCategory(e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Delivery Option
+                        </option>
+                        <option value="shoes">No delivery</option>
+                        <option value="clothes">Self-Delivery</option>
+                        <option value="electronics">Ethio-cart delivery</option>
+                      </select>
+                    </div>
+
+                    <div className="h-[50px] w-full">
+                      <label className="h-[10%]">Product Description</label>
+                      <textarea
+                        placeholder="Description"
+                        className="pl-2 w-full bg-white h-[90%]"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      ></textarea>
+                    </div>
+                    <button
+                      type="submit"
+                      onClick={handlePost}
+                      placeholder="Product name"
+                      className="pl-2 w-full rounded-lg h-[50px] text-[18px] text-white hover:bg-gray-900 transition-all duration-100 cursor-pointer font-semibold bg-black"
+                    >
+                      Post Product
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+            {activeView === "dashboard" && (
+              <div className="w-full h-full flex justify-center items-center">
+                <h1> Dashboard</h1>
               </div>
             )}
           </div>
