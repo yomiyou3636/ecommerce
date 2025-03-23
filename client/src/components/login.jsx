@@ -26,7 +26,7 @@ function Login() {
 
       toast.success("Login successful!");
       console.log("User Data:", response.data.user);
-      navigate("/dashboard");
+      navigate("/purchase_dashboard");
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Login failed";
       toast.error(errorMessage);

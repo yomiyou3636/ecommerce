@@ -39,7 +39,7 @@ function Signup() {
   };
   function toDashoard() {
     setWelcomePage(false);
-    navigate("/dashboard");
+    navigate("/purchase_dashboard");
   }
 
   return (

@@ -20,10 +20,10 @@ import { FaCartFlatbed } from "react-icons/fa6";
 import { TbTruckDelivery } from "react-icons/tb";
 import { ImCancelCircle } from "react-icons/im";
 import { CiEdit } from "react-icons/ci";
-import { Navigate } from "react-router-dom";
+import { FaCartPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
-function Dashboard() {
+function Purch_Dashboard() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [name, setName] = useState(null);
   const [price, setPrcie] = useState(null);
@@ -39,10 +39,15 @@ function Dashboard() {
   const [userEmail, setUserEmail] = useState(null);
   const [error, setError] = useState(null);
   const [viewprofile, setViewprofile] = useState(false);
-  const [viewedit, setviewedit] = useState(false);
   const [viewmore, setviewmore] = useState(false);
-  const [activeView, setActiveView] = useState("dashboard");
+  const [vieworder, setvieworder] = useState(false);
+  const [activeView, setActiveView] = useState("allpost");
   const [productid, setproductid] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [cartTtemCounts, setCartTtemCounts] = useState({});
+  const [totalCartItems, SettotalCartItems] = useState(0);
+  const [totalCartAmount, settotalCartAmount] = useState(0);
+  const [deliveryLocation, setdeliveryLocation] = useState(0);
   const navigate = useNavigate(); // Initialize navigate
 
   const handleFileChange = (event) => {
@@ -52,7 +57,18 @@ function Dashboard() {
   const handlefileselect = () => {
     document.getElementById("fileInput").click();
   };
-
+  const handleIncrement = (postId) => {
+    setCartTtemCounts((prev) => ({
+      ...prev,
+      [postId]: (prev[postId] || 1) + 1,
+    }));
+  };
+  const handleDecrement = (postId) => {
+    setCartTtemCounts((prev) => ({
+      ...prev,
+      [postId]: prev[postId] > 1 ? prev[postId] - 1 : 0,
+    }));
+  };
   // handle product post
   const handlePost = async (e) => {
     e.preventDefault();
@@ -117,7 +133,7 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/product/myposts",
+        "http://localhost:5000/product/all",
 
         {
           params: { page },
@@ -180,50 +196,6 @@ function Dashboard() {
     }
   };
 
-  // edit existing post
-  const editpost = async () => {
-    if (
-      !name ||
-      !price ||
-      !itemCount ||
-      !category ||
-      !description ||
-      !location
-    ) {
-      toast.error("Please fill in all fields and select an image.");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("price", price);
-    formData.append("items", itemCount);
-    formData.append("category", category);
-    formData.append("description", description);
-    formData.append("location", location);
-    if (selectedFile != null) {
-      formData.append("image", selectedFile);
-    }
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.put(
-        `http://localhost:5000/product/update/${productid}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("Product posted successfully:", response.data);
-
-      toast.success("Post edited successfully!");
-    } catch {
-      toast.error("Edit failed");
-    }
-  };
   // deleted an existing post
   const deletePost = async () => {
     try {
@@ -268,7 +240,98 @@ function Dashboard() {
       Swal.fire("Error!", "An error occurred during deletion.", "error");
     }
   };
+  const addToCart = (item) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart[item.productId];
 
+      if (existingItem) {
+        // Update existing item
+        return {
+          ...prevCart,
+          [item.productId]: {
+            ...existingItem,
+            itemsCount: existingItem.itemsCount + item.itemsCount,
+            totalAmount: existingItem.totalAmount + item.totalAmount,
+          },
+        };
+      } else {
+        // Add new item
+        return {
+          ...prevCart,
+          [item.productId]: item,
+        };
+      }
+    });
+  };
+
+  // Function to remove an item from the cart
+  const removeFromCart = (productId) => {
+    setCart((prevCart) => {
+      const updatedCart = { ...prevCart };
+      delete updatedCart[productId]; // Remove item
+      return updatedCart;
+    });
+  };
+
+  const clearCart = () => {
+    setCart({});
+  };
+
+  const calculateCartTotals = () => {
+    let totalItems = 0;
+    let totalAmount = 0;
+    Object.values(cart).forEach((item) => {
+      totalItems += item.itemsCount;
+      totalAmount += item.totalAmount;
+    });
+
+    settotalCartAmount(totalAmount);
+    SettotalCartItems(totalItems);
+  };
+
+  const sendOrderToBackend = async () => {
+    if (Object.keys(cart).length === 0) {
+      alert("Cart is empty!");
+      return;
+    }
+
+    // Convert the cart object into an array of { productId, itemsCount }
+    const formattedOrders = Object.values(cart).map((item) => ({
+      productId: item.productId,
+      itemsCount: item.itemsCount,
+    }));
+
+    const orderData = {
+      customerEmail: userEmail, // Replace with the actual customer email
+      deliveryLocation: deliveryLocation, // Replace with the actual delivery location
+      orders: formattedOrders, // Formatted orders
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/order/addorder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include token if authentication is required
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setvieworder(false);
+        toast.success("Order placed successfully!");
+        setCart({});
+      } else {
+        toast.error(`${data.message}`);
+        setvieworder(false);
+      }
+    } catch (error) {
+      toast.error("Failed to send order:", error);
+    }
+  };
   useEffect(() => {
     if (selectedFile) {
       console.log(selectedFile.name);
@@ -277,12 +340,23 @@ function Dashboard() {
 
   useEffect(() => {
     fetchUserData();
+    fetchPosts(1);
+
+    const intervalId = setInterval(() => {
+      fetchUserData();
+      fetchPosts(1);
+    }, 20000);
+
+    return () => clearInterval(intervalId);
   }, []);
+  useEffect(() => {
+    calculateCartTotals();
+  }, [cart]);
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="w-[100vw] h-[100vh]  flex flex-col relative  ">
+      <div className="relative overflow-clip w-[100vw] h-[100vh]  flex flex-col   ">
         {viewmore && (
           <div className="  flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
             <div className="w-[45%] h-[80%] bg-white flex flex-col justify-between items-end p-2">
@@ -361,125 +435,69 @@ function Dashboard() {
             </div>
           </div>
         )}
-        {viewedit && (
-          <div className=" flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
-            <div className="w-[45%] h-[80%] bg-white flex flex-col justify-between items-end p-2">
+
+        {vieworder && (
+          <div className="  flex absolute w-full h-full  justify-center  items-center inset-0 backdrop-blur-lg bg-white/30">
+            <div className="w-[45%] h-[80%] bg-white flex flex-col justify-start items-end p-2">
               <button
                 className="cursor-pointer text-[#1ecbe1] "
                 onClick={() => {
-                  setviewedit(false);
+                  setvieworder(false);
                 }}
               >
-                <IoMdClose className="text-[25px] " />
+                <IoMdClose className="text-[23px] " />
               </button>
-              <div className="w-full p-2  h-[90%] bg-[#1ecbe1] flex">
-                <div className="w-[40%] h-full flex items-center gap-2 flex-col justify-center">
-                  <div
-                    className="h-[50%] w-full  border-4 border-white bg-cover bg-center bg-no-repeat "
-                    style={{
-                      backgroundImage: `url(http://localhost:5000/uploads/${image})`,
-                    }}
-                  ></div>
-                  <button
-                    type="button"
-                    className="w-full cursor-pointer h-[40px] rounded-2xl  border-2 flex flex-col justify-center items-center"
-                    onClick={handlefileselect}
-                  >
-                    Change Image
-                  </button>
-                  <input
-                    type="file"
-                    id="fileInput"
-                    style={{ display: "none" }}
-                    onChange={handleFileChange}
-                    accept="image/jpeg, image/png, image/gif,image/jpg"
-                  />
+              {Object.keys(cart).length === 0 ? (
+                <p className="w-full h-full text-center">Your cart is empty.</p>
+              ) : (
+                <ul className="flex flex-col w-full h-[80%] border-2 border-blue-200 overflow-y-scroll ">
+                  {Object.values(cart).map((item) => (
+                    <li
+                      className="p-1 border-white border-2 h-auto bg-blue-200"
+                      key={item.productId}
+                    >
+                      <div className=" w-full pr-2  flex items-center justify-between">
+                        <p>name: {item.productname}</p>
+                        <button
+                          className="cursor-pointer h-full w-[10%] bg-white"
+                          onClick={() => removeFromCart(item.productId)}
+                        >
+                          X
+                        </button>
+                      </div>
+                      <p>Items: {item.itemsCount}</p>
+                      <p>Total Price: ${item.totalAmount}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="w-full  flex-col  gap-1 h-[15%] flex mt-2">
+                <div className="grid grid-cols-2  w-full gap-2 h-1/2">
+                  <p className="w-full h-full bg-blue-200 pl-2">
+                    Total Amount: {totalCartAmount}
+                  </p>
+                  <p className="w-full h-full bg-blue-200 pl-2">
+                    Total Number of Items: {totalCartItems}
+                  </p>
                 </div>
-                <div className="w-[60%] px-2 h-full  flex justify-center flex-col gap-2 items-center  ">
-                  <div className="h-[50%]  w-full p-2  bg-white text-black grid grid-rows-6 px-0 justify-center items-center flex-col ">
-                    <div className="w-full h-full flex border-[#1ecbe1] border-b-2 border-t-4  border-x-0  ">
-                      <p className="w-1/2 flex items-center  px-2 ">Name</p>
-                      <input
-                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
-                        placeholder={name}
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
-                      <p className="w-1/2 flex items-center  px-2 ">Price</p>
-                      <input
-                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
-                        placeholder={price}
-                        value={price}
-                        onChange={(e) => setPrcie(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
-                      <p className="w-1/2 flex items-center  px-2 ">Items</p>
-                      <input
-                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
-                        placeholder={itemCount}
-                        value={itemCount}
-                        onChange={(e) => setItemCount(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
-                      <p className="w-1/2 flex items-center  px-2 ">
-                        Description
-                      </p>
-                      <input
-                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
-                        placeholder={description}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-full h-full flex border-y-[#1ecbe1] border-2 border-x-0  ">
-                      <p className="w-1/2 flex items-center  px-2 ">Location</p>
-                      <input
-                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
-                        placeholder={location}
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-full h-full flex border-[#1ecbe1] border-t-2 border-b-4  border-x-0  ">
-                      <p className="w-1/2 flex items-center  px-2 ">Category</p>
-                      <select
-                        className="border-2 focus:outline-none border-x-gray-500 border-y-0 w-1/2 px-2 h-full break-words whitespace-normal "
-                        value={category} // Set default value
-                        onChange={(e) => setCategory(e.target.value)}
-                      >
-                        <option value="" disabled>
-                          Product Category
-                        </option>
-                        <option value="shoes">Shoes</option>
-                        <option value="clothes">Clothes</option>
-                        <option value="electronics">Electronics</option>
-                        <option value="accessories">Accessories</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="w-full h-[40px]  grid grid-cols-2 gap-2">
-                    <button
-                      onClick={deletePost}
-                      className="w-full h-full  rounded-2xl border-2 border-black bg-white text-[17px] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#AFACAC]"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      onClick={editpost}
-                      className="w-full h-full  rounded-2xl bg-black text-[17px] cursor-pointer text-[#1ecbe1]"
-                    >
-                      Submit
-                    </button>
-                  </div>
+                <div className="w-full h-1/2 gap grid grid-cols-2 gap-2  ">
+                  <input
+                    className="pl-2 w-full h-full bg-blue-200 focus:outline-blue-950"
+                    placeholder="Enter Delivery Location"
+                    onChange={(e) => setdeliveryLocation(e.target.value)}
+                  ></input>
+                  <button
+                    onClick={sendOrderToBackend}
+                    className="w-full h-full bg-blue-900 text-white text-[17px] cursor-pointer font-semibold"
+                  >
+                    Place Order
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         )}
+
         {/* top navingation bar  */}
         <div className="relative h-[10%] w-full bg-[#F5FCFC] border-b-1 border-[#1ecbe1] flex justify-between items-center">
           <div className="w-[20vw]  h-full flex justify-center gap-1 items-center bodrer-r-solid border-[#1ecbe1] border-r-[1px]">
@@ -490,14 +508,14 @@ function Dashboard() {
             <h1 className="text-[20px] ">Ethio-Carts</h1>
           </div>
 
-          <div className="w-[15vw] cursor-pointer  gap-2  h-full flex justify-center   items-center ">
+          <div className="w-[20vw] cursor-pointer  gap-2  h-full flex justify-center   items-center ">
             <button
               onClick={() => {
-                navigate("/purchase_dashboard");
+                navigate("/dashboard");
               }}
               className="w-[100px] cursor-pointer rounded-sm h-[38px] bg-[#1ecbe1] flex  justify-center items-center "
             >
-              Buy Product
+              Sell Product
             </button>
             <button
               onClick={() => {
@@ -526,135 +544,103 @@ function Dashboard() {
               </div>
               <div className="w-full h-[55%] py-6 p-12 grid gap-2 grid-rows-3">
                 <button className="w-full h-full flex justify-center items-center gap-2 bg-black text-white ">
+                  <UserRoundCog size={24} />
+                  My Orders
+                </button>
+                <button className="w-full h-full  bg-black text-white flex justify-center items-center gap-2">
+                  <IoStatsChartSharp className="text-[20px]" />
+                  My Purcahse
+                </button>
+                <button className="w-full h-full flex justify-center items-center gap-2 bg-black text-white ">
                   <IoLogOutOutline className="text-[25px]" /> Logout
                 </button>
               </div>
             </div>
           )}
         </div>
-        {/* {viewaddpost &&( */}
         <div className="w-[100vw] h-[100vh] flex ">
-          {/* sidebar  */}
-          <div className="w-[20%] h-full  gap-2 flex-col border-t-1  border-r-1 border-[#1ecbe1] bg-[#1ecbe1] p-2 flex ">
-            <div className="w-full h-[80%]  grid grid-rows-8 gap-2">
-              <button
-                onClick={() => {
-                  setActiveView("dashboard");
-                }}
-                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
-              >
-                <MdDashboard className="text-[28px] text-[#1ecbe1]" />
-                Dashboard
-              </button>
-              <button
-                onClick={() => {
-                  setActiveView("mypost");
-                  fetchPosts(currentPage);
-                }}
-                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
-              >
-                <MdOutlineProductionQuantityLimits className="text-[28px] text-[#1ecbe1]" />
-                My Post
-              </button>
-              <button
-                addpost
-                onClick={() => setActiveView("addpost")}
-                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
-              >
-                <MdOutlinePostAdd className="text-[28px] text-[#1ecbe1]" />
-                Post product
-              </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
-                <FaCartFlatbed className="text-[28px] text-[#1ecbe1]" />
-                All Orders
-              </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
-                <MdOutlinePending className="text-[28px] text-[#1ecbe1]" />
-                Pending Order
-              </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
-                <TbTruckDelivery className="text-[28px] text-[#1ecbe1]" />
-                Delivered Order
-              </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
-                <ImCancelCircle className="text-[25px] text-[#1ecbe1]" />
-                Cancelled Order
-              </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
-                <AiOutlineHistory className="text-[28px] text-[#1ecbe1]" />
-                History
-              </button>
-            </div>
-            <div className="w-full h-[20%] flex justify-center items-center  ">
-              <button className="w-[70%] h-[50%] bg-black text-white rounded-2xl flex justify-center items-center gap-2">
-                <IoLogOutOutline className="text-[30px] text-whilte " />
-                Logout
-              </button>
-            </div>
-          </div>
           <div className="w-[80%] h-full ">
-            {activeView === "mypost" && (
+            {activeView === "allpost" && (
               <div className="w-full  h-full  flex flex-col p-2 ">
                 <div className="w-full h-[90%]  grid grid-cols-4 gap-2 grid-rows-2">
                   {posts.length > 0 ? (
                     posts.map((post) => (
                       <div
                         key={post._id}
-                        className=" w-full h-full rounded-md border-4 border-[#F5FCFC]"
+                        className=" w-full h-full rounded-md border-4  border-[#F5FCFC] shadow-lg shadow-gray-400"
                       >
                         <div
-                          className="w-full h-[50%] bg-cover bg-center bg-no-repeat "
-                          style={{
-                            backgroundImage: `url(http://localhost:5000/uploads/${post.image})`,
+                          className="w-full h-[82%] bg-[#F5FCFC]"
+                          onClick={() => {
+                            setName(post.name);
+                            setDescription(post.description);
+                            setPrcie(post.price);
+                            setCategory(post.category);
+                            setItemCount(post.items);
+                            setLocation(post.location);
+                            setproductid(post.id);
+                            setImage(post.image);
+                            setviewmore(true);
                           }}
-                        ></div>
+                        >
+                          <div
+                            className="w-full h-[50%] bg-cover bg-center bg-no-repeat "
+                            style={{
+                              backgroundImage: `url(http://localhost:5000/uploads/${post.image})`,
+                            }}
+                          ></div>
 
-                        <div className="w-full h-[50%]  flex flex-col  bg-[#C6F2F6]">
-                          <div className="w-full  pb-1 h-[65%] px-2">
-                            <p className="text-[18px] w-full">
-                              Name: {post.name}
-                            </p>
-                            <p className="text-[18px] w-full ">
-                              Price: {post.price}
-                            </p>
-                            <p className="text-[18px] w-full ">
-                              Items: {post.items}
-                            </p>
+                          <div className="w-full h-[50%]   flex flex-col  ">
+                            <div className="w-full  pb-1 h-[65%] px-2">
+                              <p className="text-[18px] w-full">
+                                Name: {post.name}
+                              </p>
+                              <p className="text-[18px] w-full ">
+                                Price: {post.price}
+                              </p>
+                              <p className="text-[18px] w-full ">
+                                Items: {post.items}
+                              </p>
+                            </div>
                           </div>
-                          <div className="w-full h-[35%] grid gap-2 p-1 bg-[#C6F2F6] grid-cols-2">
+                        </div>
+                        <div className="w-full h-[18%] grid gap-2 p-1 bg-[#F5FCFC] grid-cols-2">
+                          <div className="w-full h-full text-white grid grid-cols-3 rounded-lg overflow-hidden ">
                             <button
-                              onClick={() => {
-                                setName(post.name);
-                                setDescription(post.description);
-                                setPrcie(post.price);
-                                setCategory(post.category);
-                                setItemCount(post.items);
-                                setLocation(post.location);
-                                setproductid(post.id);
-                                setImage(post.image);
-                                setviewmore(true);
-                              }}
-                              className="w-full h-full  cursor-pointer bg-black  rounded-lg text-[#1ecbe1]"
+                              onClick={() => handleDecrement(post._id)}
+                              className="h-full w-full  cursor-pointer bg-blue-500 hover:bg-blue-600 transition-all duration-100 text-[25px]"
                             >
-                              More...
+                              -
                             </button>
+                            <div className="w-full  text-black h-full flex items-center justify-center">
+                              {cartTtemCounts[post._id] || 1}
+                            </div>
                             <button
-                              onClick={() => {
-                                setName(post.name);
-                                setDescription(post.description);
-                                setPrcie(post.price);
-                                setCategory(post.category);
-                                setItemCount(post.items);
-                                setLocation(post.location);
-                                setproductid(post.id);
-                                setImage(post.image);
-                                setviewedit(true);
-                              }}
-                              className="w-full cursor-pointer h-full hover:bg-[#1ecbe1] transition-all duration-150 flex justify-center items-center gap-2 bg-white  rounded-lg"
+                              onClick={() => handleIncrement(post._id)}
+                              className="h-full w-full  cursor-pointer bg-blue-500 hover:bg-blue-600 transition-all duration-100 text-[25px]"
                             >
-                              <CiEdit className="text-[20px]" /> Edit
+                              +
                             </button>
                           </div>
+                          <button
+                            onClick={() => {
+                              //   setPrcie(post.price);
+                              //   setItemCount(post.items);
+                              //   setproductid(post.id);
+                              addToCart({
+                                productname: post.name,
+                                productId: post.id,
+                                customerEmail: userEmail,
+                                itemsCount: cartTtemCounts[post._id] || 1,
+                                sellerId: post.seller,
+                                totalAmount:
+                                  (cartTtemCounts[post._id] || 1) * post.price,
+                              });
+                            }}
+                            className="w-full cursor-pointer gap-1 h-full hover:bg-blue-600 transition-all duration-150 flex justify-center items-center  bg-blue-500 text-white  rounded-lg"
+                          >
+                            <FaCartPlus className="text[23px]" /> Add to Cart
+                          </button>
                         </div>
                       </div>
                     ))
@@ -665,7 +651,7 @@ function Dashboard() {
                 <div className="w-full h-[10%] gap-2 flex p-2">
                   <button
                     id="previous"
-                    className="w-[50%] bg-[#1ecbe1] text-[16px] cursor-pointer"
+                    className="w-[50%] bg-blue-500 text-[16px] cursor-pointer"
                     onClick={() => handlePageNumber("p")}
                   >
                     Previous
@@ -805,10 +791,60 @@ function Dashboard() {
               </div>
             )}
             {activeView === "dashboard" && (
-              <div className="w-full h-full flex justify-center items-center">
+              <div className="w-full relative h-full flex justify-center items-center">
                 <h1> Dashboard</h1>
               </div>
             )}
+          </div>
+          <div className="w-[20%] relative max-h-full   gap-2 flex-col border-t-1  border-r-1 border-[#1ecbe1] bg-[#1ecbe1] p-2 flex  justify-start items-center  ">
+            <div className="w-full h-[8%] bg-blue-950 flex justify-center items-center">
+              <p className="text-white font-bold text-[23px] text-center">
+                My Cart
+              </p>
+            </div>
+            <div className="w-full min-h-[10%] overflow-y-scroll   max-h-[90%] flex flex-col bg-white gap-2">
+              {Object.keys(cart).length === 0 ? (
+                <p className="w-full h-full text-center">Your cart is empty.</p>
+              ) : (
+                <ul className="flex flex-col  bg-white">
+                  {Object.values(cart).map((item) => (
+                    <li
+                      className="p-1 border-white border-2 h-auto bg-blue-200"
+                      key={item.productId}
+                    >
+                      <div className=" w-full pr-2  flex items-center justify-between">
+                        <p>name: {item.productname}</p>
+                        <button
+                          className="cursor-pointer h-full w-[10%] bg-white"
+                          onClick={() => removeFromCart(item.productId)}
+                        >
+                          X
+                        </button>
+                      </div>
+                      <p>Items: {item.itemsCount}</p>
+                      <p>Total Price: ${item.totalAmount}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="w-full h-[10%]  p-2 gap-1 flex">
+              <button
+                onClick={clearCart}
+                className="h-full w-1/2 bg-blue-950 text-[18px] cursor-pointer text-white"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => {
+                  setvieworder(true);
+                  calculateCartTotals();
+                }}
+                className="h-full w-1/2 bg-black text-[18px] cursor-pointer text-[#1ecbe1]"
+              >
+                Order
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -816,4 +852,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default Purch_Dashboard;

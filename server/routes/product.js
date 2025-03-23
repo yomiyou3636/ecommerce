@@ -138,30 +138,36 @@ router.get("/myposts", protect, async (req, res) => {
 });
 
 // Route to get all products (randomly)
+// Route to get the latest products (paginated)
 router.get("/all", async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10; // Default: 10 items per category
-  const categoryLimit = parseInt(req.query.categoryLimit) || 3; // Number of random categories
-
   try {
-    // Get distinct categories from the database
-    const categories = await Product.distinct("category");
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8;
+    const skip = (page - 1) * limit;
 
-    if (categories.length === 0) {
-      return res.json({ message: "No categories found", products: [] });
-    }
-
-    // Shuffle and pick a few random categories
-    const randomCategories = categories
-      .sort(() => 0.5 - Math.random())
-      .slice(0, categoryLimit);
-
-    // Fetch latest products from selected categories
-    const products = await Product.find({ category: { $in: randomCategories } })
-      .sort({ createdAt: -1 }) // Latest first
+    // Fetch latest products, sorted by creation date
+    const products = await Product.find()
+      .sort({ createdAt: -1 }) // Sort by latest first
+      .skip(skip)
       .limit(limit);
 
-    res.json({ categories: randomCategories, products });
+    // Get total count for pagination
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // Transform image field to return only filename
+    const formattedProducts = products.map((product) => ({
+      ...product.toObject(),
+      image: product.image ? path.basename(product.image) : null, // Extract only filename
+    }));
+
+    res.status(200).json({
+      products: formattedProducts,
+      totalPages,
+      currentPage: page,
+    });
   } catch (error) {
+    console.error("Error fetching latest products:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
