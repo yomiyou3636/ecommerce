@@ -35,19 +35,22 @@ router.post("/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.matchPassword(password); // Assuming bcrypt
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Create a JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h", // Token expires in 1 hour
-    });
+    // ✅ Create a JWT token with email and role included
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role }, // Ensure email is included
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     res.json({
       token,
@@ -59,10 +62,10 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Login Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 router.get("/me", protect, async (req, res) => {
   try {
     const userId = req.user.id; // or req.user._id depending on how it's stored

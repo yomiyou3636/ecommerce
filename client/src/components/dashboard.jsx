@@ -490,7 +490,7 @@ function Dashboard() {
             <h1 className="text-[20px] ">Ethio-Carts</h1>
           </div>
 
-          <div className="w-[15vw] cursor-pointer  gap-2  h-full flex justify-center   items-center ">
+          <div className="w-[20vw] cursor-pointer  gap-2  h-full flex justify-center   items-center ">
             <button
               onClick={() => {
                 navigate("/purchase_dashboard");

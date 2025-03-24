@@ -43,6 +43,10 @@ const orderSchema = new mongoose.Schema(
       type: String, // Reference to the product's ID
       required: true,
     },
+    productName: {
+      type: String, // Reference to the product's ID
+      required: true,
+    },
   },
   { timestamps: true }
 );

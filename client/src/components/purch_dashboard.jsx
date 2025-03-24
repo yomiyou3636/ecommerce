@@ -48,6 +48,9 @@ function Purch_Dashboard() {
   const [totalCartItems, SettotalCartItems] = useState(0);
   const [totalCartAmount, settotalCartAmount] = useState(0);
   const [deliveryLocation, setdeliveryLocation] = useState(0);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate(); // Initialize navigate
 
   const handleFileChange = (event) => {
@@ -332,6 +335,56 @@ function Purch_Dashboard() {
       toast.error("Failed to send order:", error);
     }
   };
+
+  const displayOrdersfun = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token from storage
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
+
+      const response = await axios.get("http://localhost:5000/order/myorders", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Send token to backend
+        },
+      });
+
+      setOrders(response.data);
+      setActiveView("displayOrders");
+      setViewprofile(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const cancelOrder = async (orderId) => {
+    const token = localStorage.getItem("token"); // Get JWT token from local storage or wherever it is stored
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/order/cancel/${orderId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the JWT token to the Authorization header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Order canceled successfully");
+        // Handle success (e.g., update UI)
+      } else {
+        toast.error("Failed to cancel order: " + response.data.message);
+        // Handle failure (e.g., display an error message)
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Error canceling the order: " + error.message);
+      // Handle error (e.g., display an error message)
+    }
+  };
   useEffect(() => {
     if (selectedFile) {
       console.log(selectedFile.name);
@@ -543,7 +596,10 @@ function Purch_Dashboard() {
                 <h1>{userEmail}</h1>
               </div>
               <div className="w-full h-[55%] py-6 p-12 grid gap-2 grid-rows-3">
-                <button className="w-full h-full flex justify-center items-center gap-2 bg-black text-white ">
+                <button
+                  onClick={displayOrdersfun}
+                  className="w-full h-full flex cursor-pointer justify-center items-center gap-2 bg-black text-white "
+                >
                   <UserRoundCog size={24} />
                   My Orders
                 </button>
@@ -558,9 +614,10 @@ function Purch_Dashboard() {
             </div>
           )}
         </div>
-        <div className="w-[100vw] h-[100vh] flex ">
-          <div className="w-[80%] h-full ">
-            {activeView === "allpost" && (
+
+        {activeView === "allpost" && (
+          <div className="w-[100vw] h-[90vh] flex  ">
+            <div className="w-[80%] h-full  ">
               <div className="w-full  h-full  flex flex-col p-2 ">
                 <div className="w-full h-[90%]  grid grid-cols-4 gap-2 grid-rows-2">
                   {posts.length > 0 ? (
@@ -608,7 +665,7 @@ function Purch_Dashboard() {
                           <div className="w-full h-full text-white grid grid-cols-3 rounded-lg overflow-hidden ">
                             <button
                               onClick={() => handleDecrement(post._id)}
-                              className="h-full w-full  cursor-pointer bg-blue-500 hover:bg-blue-600 transition-all duration-100 text-[25px]"
+                              className="h-full w-full  cursor-pointer bg-[#1ecbe1] hover:bg-blue-600 transition-all duration-100 text-[25px]"
                             >
                               -
                             </button>
@@ -617,7 +674,7 @@ function Purch_Dashboard() {
                             </div>
                             <button
                               onClick={() => handleIncrement(post._id)}
-                              className="h-full w-full  cursor-pointer bg-blue-500 hover:bg-blue-600 transition-all duration-100 text-[25px]"
+                              className="h-full w-full  cursor-pointer bg-[#1ecbe1] hover:bg-blue-600 transition-all duration-100 text-[25px]"
                             >
                               +
                             </button>
@@ -637,7 +694,7 @@ function Purch_Dashboard() {
                                   (cartTtemCounts[post._id] || 1) * post.price,
                               });
                             }}
-                            className="w-full cursor-pointer gap-1 h-full hover:bg-blue-600 transition-all duration-150 flex justify-center items-center  bg-blue-500 text-white  rounded-lg"
+                            className="w-full cursor-pointer gap-1 h-full hover:bg-blue-600 transition-all duration-150 flex justify-center items-center  bg-[#1ecbe1] text-white  rounded-lg"
                           >
                             <FaCartPlus className="text[23px]" /> Add to Cart
                           </button>
@@ -651,7 +708,7 @@ function Purch_Dashboard() {
                 <div className="w-full h-[10%] gap-2 flex p-2">
                   <button
                     id="previous"
-                    className="w-[50%] bg-blue-500 text-[16px] cursor-pointer"
+                    className="w-[50%] bg-[#1ecbe1] hover:bg-blue-500 text-[16px] cursor-pointer"
                     onClick={() => handlePageNumber("p")}
                   >
                     Previous
@@ -665,188 +722,106 @@ function Purch_Dashboard() {
                   </button>
                 </div>
               </div>
-            )}
-            {activeView === "addpost" && (
-              <div className="w-full h-full  flex justify-center items-center ">
-                <form className="w-[70%] h-[90%] bg-[#1ecbe1]  p-4  flex flex-col justify-start items-center  ">
-                  <button
-                    type="button"
-                    className="w-full h-[30%] bg-[#C6F2F6] rounded-2xl border-dashed border-2 flex flex-col justify-center items-center"
-                    onClick={handlefileselect}
-                  >
-                    <Plus size={50}></Plus>
-
-                    {selectedFile && (
-                      <p className="text-center font-sans text-[17px]">
-                        {/* Selected file: {selectedFile.name} */}
-                        Change Image
-                      </p>
-                    )}
-                    {!selectedFile && (
-                      <p className="text-center font-sans text-[17px]">
-                        Upload Product Image
-                      </p>
-                    )}
-                  </button>
-                  <div className="w-full h-[70%]  flex justify-between items-center flex-wrap ">
-                    <input
-                      type="file"
-                      id="fileInput"
-                      style={{ display: "none" }}
-                      onChange={handleFileChange}
-                      accept="image/jpeg, image/png, image/gif,image/jpg"
-                    />
-
-                    <div className="w-[48%] h-[50px]">
-                      <label className="h-[10%]">Product name</label>
-                      <input
-                        type="text"
-                        placeholder="Name"
-                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      ></input>
-                    </div>
-                    <div className="w-[48%] h-[50px]">
-                      <label className="h-[10%]">Product Price</label>
-                      <input
-                        type="text"
-                        placeholder="Price"
-                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                        value={price}
-                        onChange={(e) => setPrcie(e.target.value)}
-                      ></input>
-                    </div>
-                    <div className="w-[48%] h-[50px]">
-                      <label className="h-[10%]">Number of Items</label>
-                      <input
-                        type="text"
-                        placeholder="count"
-                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                        value={itemCount}
-                        onChange={(e) => setItemCount(e.target.value)}
-                      ></input>
-                    </div>
-                    <div className="w-[48%] h-[50px]">
-                      <label className="h-[10%]">Loctaion</label>
-                      <input
-                        type="text"
-                        placeholder="location"
-                        className="pl-2 w-full h-[90%] bg-white text-[16px]"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                      ></input>
-                    </div>
-                    <div className="w-[48%] h-[50px]">
-                      <label className="h-[10%]">Select Category</label>
-                      <select
-                        className="w-full h-[90%] bg-white"
-                        value={category || ""} // Set default value
-                        onChange={(e) => setCategory(e.target.value)}
-                      >
-                        <option value="" disabled>
-                          Product Category
-                        </option>
-                        <option value="shoes">Shoes</option>
-                        <option value="clothes">Clothes</option>
-                        <option value="electronics">Electronics</option>
-                        <option value="accessories">Accessories</option>
-                      </select>
-                    </div>
-                    <div className="w-[48%] h-[50px]">
-                      <label className="h-[10%]">Delivery option</label>
-                      <select
-                        className="w-full h-[90%] bg-white"
-                        value={category || ""} // Set default value
-                        onChange={(e) => setCategory(e.target.value)}
-                      >
-                        <option value="" disabled>
-                          Delivery Option
-                        </option>
-                        <option value="shoes">No delivery</option>
-                        <option value="clothes">Self-Delivery</option>
-                        <option value="electronics">Ethio-cart delivery</option>
-                      </select>
-                    </div>
-
-                    <div className="h-[50px] w-full">
-                      <label className="h-[10%]">Product Description</label>
-                      <textarea
-                        placeholder="Description"
-                        className="pl-2 w-full bg-white h-[90%]"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      ></textarea>
-                    </div>
-                    <button
-                      type="submit"
-                      onClick={handlePost}
-                      placeholder="Product name"
-                      className="pl-2 w-full rounded-lg h-[50px] text-[18px] text-white hover:bg-gray-900 transition-all duration-100 cursor-pointer font-semibold bg-black"
-                    >
-                      Post Product
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-            {activeView === "dashboard" && (
-              <div className="w-full relative h-full flex justify-center items-center">
-                <h1> Dashboard</h1>
-              </div>
-            )}
-          </div>
-          <div className="w-[20%] relative max-h-full   gap-2 flex-col border-t-1  border-r-1 border-[#1ecbe1] bg-[#1ecbe1] p-2 flex  justify-start items-center  ">
-            <div className="w-full h-[8%] bg-blue-950 flex justify-center items-center">
-              <p className="text-white font-bold text-[23px] text-center">
-                My Cart
-              </p>
             </div>
-            <div className="w-full min-h-[10%] overflow-y-scroll   max-h-[90%] flex flex-col bg-white gap-2">
-              {Object.keys(cart).length === 0 ? (
-                <p className="w-full h-full text-center">Your cart is empty.</p>
-              ) : (
-                <ul className="flex flex-col  bg-white">
-                  {Object.values(cart).map((item) => (
-                    <li
-                      className="p-1 border-white border-2 h-auto bg-blue-200"
-                      key={item.productId}
+
+            <div className="w-[20%] relative max-h-full   gap-2 flex-col border-t-1  border-r-1 border-[#1ecbe1] bg-[#1ecbe1] p-2 flex  justify-start items-center  ">
+              <div className="w-full h-[8%] bg-blue-950 flex justify-center items-center">
+                <p className="text-white font-bold text-[23px] text-center">
+                  My Cart
+                </p>
+              </div>
+              <div className="w-full min-h-[10%] overflow-y-scroll   max-h-[90%] flex flex-col bg-white gap-2">
+                {Object.keys(cart).length === 0 ? (
+                  <p className="w-full h-full text-center">
+                    Your cart is empty.
+                  </p>
+                ) : (
+                  <ul className="flex flex-col  bg-white">
+                    {Object.values(cart).map((item) => (
+                      <li
+                        className="p-1 border-white border-2 h-auto bg-blue-200"
+                        key={item.productId}
+                      >
+                        <div className=" w-full pr-2  flex items-center justify-between">
+                          <p>name: {item.productname}</p>
+                          <button
+                            className="cursor-pointer h-full w-[10%] bg-white"
+                            onClick={() => removeFromCart(item.productId)}
+                          >
+                            X
+                          </button>
+                        </div>
+                        <p>Items: {item.itemsCount}</p>
+                        <p>Total Price: ${item.totalAmount}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="w-full h-[10%]  p-2 gap-1 flex">
+                <button
+                  onClick={clearCart}
+                  className="h-full w-1/2 bg-blue-950 text-[18px] cursor-pointer text-white"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => {
+                    setvieworder(true);
+                    calculateCartTotals();
+                  }}
+                  className="h-full w-1/2 bg-black text-[18px] cursor-pointer text-[#1ecbe1]"
+                >
+                  Order
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeView === "displayOrders" && (
+          <div className="w-full h-[90vh] p-4 ">
+            {orders.length === 0 && !loading && !error && (
+              <p className="text-center">No orders found.</p>
+            )}
+
+            {orders.length > 0 && (
+              <div className="w-full h-full ">
+                <div className="grid grid-cols-7 font-bold bg-[#1ecbe1] p-2 rounded">
+                  <p>Order ID</p>
+                  <p>Product ID</p>
+                  <p>Product Name</p>
+                  <p>Items Count</p>
+                  <p>Total Amount</p>
+                  <p>Status</p>
+                  <p className="w-full h-full text-center">cancle</p>
+                </div>
+                <div className="w-full h-[90%] overflow-y-scroll">
+                  {orders.map((order) => (
+                    <div
+                      key={order._id}
+                      className="grid grid-cols-7 border-b border-[#1ecbe1] p-1 "
                     >
-                      <div className=" w-full pr-2  flex items-center justify-between">
-                        <p>name: {item.productname}</p>
+                      <p className="h-[35px]">{order.orderId}</p>
+                      <p>{order.productId}</p>
+                      <p>{order.productName}</p>
+                      <p>{order.itemsCount}</p>
+                      <p>{order.totalAmount}</p>
+                      <p>{order.status}</p>
+                      <div className="w-full h-full flex justify-center items-center">
                         <button
-                          className="cursor-pointer h-full w-[10%] bg-white"
-                          onClick={() => removeFromCart(item.productId)}
+                          onClick={() => cancelOrder(order.orderId)}
+                          className="bg-red-600 h-full w-[60%] text-white rounded-lg cursor-pointer"
                         >
-                          X
+                          Cancel
                         </button>
                       </div>
-                      <p>Items: {item.itemsCount}</p>
-                      <p>Total Price: ${item.totalAmount}</p>
-                    </li>
+                    </div>
                   ))}
-                </ul>
-              )}
-            </div>
-            <div className="w-full h-[10%]  p-2 gap-1 flex">
-              <button
-                onClick={clearCart}
-                className="h-full w-1/2 bg-blue-950 text-[18px] cursor-pointer text-white"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => {
-                  setvieworder(true);
-                  calculateCartTotals();
-                }}
-                className="h-full w-1/2 bg-black text-[18px] cursor-pointer text-[#1ecbe1]"
-              >
-                Order
-              </button>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </>
   );

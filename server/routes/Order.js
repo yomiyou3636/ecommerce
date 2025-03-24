@@ -28,7 +28,7 @@ const generateOrderId = async () => {
 
 // Create Order
 router.post("/addorder", protect, async (req, res) => {
-  const { orders, customerEmail, deliveryLocation } = req.body;
+  const { orders, customerEmail, deliveryLocation } = req.body; // Removed productName from req.body
 
   if (!orders || !Array.isArray(orders) || orders.length === 0) {
     return res
@@ -37,8 +37,11 @@ router.post("/addorder", protect, async (req, res) => {
   }
 
   try {
-    // Check stock availability for all items
     let insufficientStockItems = [];
+    let orderList = [];
+
+    // Generate a single orderId for all items in this cart
+    const orderId = await generateOrderId();
 
     for (const item of orders) {
       const { productId, itemsCount } = item;
@@ -65,37 +68,19 @@ router.post("/addorder", protect, async (req, res) => {
           available: product.items,
           requested: itemsCount,
         });
+        continue; // Skip adding this order item if stock is insufficient
       }
-    }
-
-    // If any product has insufficient stock, reject the whole order
-    if (insufficientStockItems.length > 0) {
-      return res.status(400).json({
-        message: "Order cannot be placed due to insufficient stock.",
-        insufficientStockItems,
-      });
-    }
-
-    // Generate a single orderId for all items in this cart
-    const orderId = await generateOrderId();
-
-    let orderList = [];
-
-    for (const item of orders) {
-      const { productId, itemsCount } = item;
-
-      // Find the product again to process the order
-      const product = await Product.findOne({ id: productId });
 
       // Calculate total amount for this product
       const totalAmount = itemsCount * product.price;
 
-      // Create the order object
+      // Create the order object (now fetching productName from database)
       const newOrder = {
         orderId, // Shared order ID
         orderTime: new Date().toLocaleTimeString(),
         itemsCount,
         customerEmail,
+        productName: product.name, // ✅ Corrected: Fetch product name from database
         sellerId: product.seller,
         totalAmount,
         deliveryLocation,
@@ -107,6 +92,14 @@ router.post("/addorder", protect, async (req, res) => {
       // Deduct the purchased items from stock
       product.items -= itemsCount;
       await product.save();
+    }
+
+    // If any product had insufficient stock, return an error
+    if (insufficientStockItems.length > 0) {
+      return res.status(400).json({
+        message: "Order cannot be placed due to insufficient stock.",
+        insufficientStockItems,
+      });
     }
 
     // Save all orders in bulk
@@ -122,6 +115,7 @@ router.post("/addorder", protect, async (req, res) => {
 router.put("/cancel/:orderId", protect, async (req, res) => {
   try {
     const { orderId } = req.params;
+    console.log("orderId");
 
     // Find all order records with the same orderId
     const orders = await Order.find({ orderId });
@@ -155,4 +149,28 @@ router.put("/cancel/:orderId", protect, async (req, res) => {
   }
 });
 
+router.get("/myorders", protect, async (req, res) => {
+  try {
+    const userEmail = req.user.email; // Get the logged-in user's email
+    console.log(userEmail);
+
+    if (!userEmail) {
+      return res.status(400).json({ message: "User email not found." });
+    }
+
+    // Fetch orders where the customerEmail matches the logged-in user
+    const userOrders = await Order.find({ customerEmail: userEmail });
+
+    if (userOrders.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for this user." });
+    }
+
+    res.status(200).json(userOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
 export default router;
