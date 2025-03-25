@@ -24,7 +24,6 @@ import { FaCartPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function Purch_Dashboard() {
-  const [selectedFile, setSelectedFile] = useState(null);
   const [name, setName] = useState(null);
   const [price, setPrcie] = useState(null);
   const [itemCount, setItemCount] = useState(null);
@@ -50,16 +49,10 @@ function Purch_Dashboard() {
   const [deliveryLocation, setdeliveryLocation] = useState(0);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loggedin, setloggedin] = useState(false);
 
   const navigate = useNavigate(); // Initialize navigate
 
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
-
-  const handlefileselect = () => {
-    document.getElementById("fileInput").click();
-  };
   const handleIncrement = (postId) => {
     setCartTtemCounts((prev) => ({
       ...prev,
@@ -73,65 +66,6 @@ function Purch_Dashboard() {
     }));
   };
   // handle product post
-  const handlePost = async (e) => {
-    e.preventDefault();
-    if (
-      !name ||
-      !price ||
-      !itemCount ||
-      !category ||
-      !description ||
-      !location ||
-      !selectedFile
-    ) {
-      toast.error("Please fill in all fields and select an image.");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("price", price);
-    formData.append("items", itemCount);
-    formData.append("category", category);
-    formData.append("description", description);
-    formData.append("location", location);
-    formData.append("image", selectedFile);
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.post(
-        "http://localhost:5000/product/post",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      console.log("Product posted successfully:", response.data);
-
-      setName("");
-      setPrcie("");
-      setItemCount("");
-      setCategory("");
-      setDescription("");
-      setLocation("");
-      setSelectedFile(null);
-
-      toast.success("Product posted successfully!");
-    } catch (error) {
-      console.error("Error posting product:", error);
-      alert("Error posting product. Please try again.");
-    }
-  };
-  //fetch products posted by logged in user
   const fetchPosts = async (page) => {
     try {
       const token = localStorage.getItem("token");
@@ -200,49 +134,6 @@ function Purch_Dashboard() {
   };
 
   // deleted an existing post
-  const deletePost = async () => {
-    try {
-      if (!productid) {
-        console.error("Product ID is undefined!");
-        return;
-      }
-
-      const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete it!",
-      });
-
-      if (result.isConfirmed) {
-        const token = localStorage.getItem("token");
-        const response = await axios.delete(
-          `http://localhost:5000/product/delete/${productid}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        // console.log("Post deleted successfully:", response.data);
-        Swal.fire("Deleted!", "Your post has been deleted.", "success");
-        return response.data;
-      } else {
-        // Swal.fire("Cancelled", "Your post is safe :)", "error");
-        return null;
-      }
-    } catch (error) {
-      console.error(
-        "Error deleting post:",
-        error.response?.data || error.message
-      );
-      Swal.fire("Error!", "An error occurred during deletion.", "error");
-    }
-  };
   const addToCart = (item) => {
     setCart((prevCart) => {
       const existingItem = prevCart[item.productId];
@@ -385,13 +276,39 @@ function Purch_Dashboard() {
       // Handle error (e.g., display an error message)
     }
   };
-  useEffect(() => {
-    if (selectedFile) {
-      console.log(selectedFile.name);
+  const logout = async () => {
+    const token = localStorage.getItem("token"); // Get the JWT token from local storage
+
+    try {
+      // Make the logout request to the backend
+      const response = await axios.post(
+        "http://localhost:5000/auth/logout", // Replace with your actual logout endpoint
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        localStorage.removeItem("token"); // Remove token from localStorage
+        navigate("/"); // Redirect to login page
+      }
+    } catch (error) {
+      console.error("Logout Error:", error);
+      // Handle any error (e.g., display a message)
     }
-  }, [selectedFile]);
+  };
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setloggedin(true);
+    } else {
+      setloggedin(false);
+    }
+
     fetchUserData();
     fetchPosts(1);
 
@@ -553,7 +470,13 @@ function Purch_Dashboard() {
 
         {/* top navingation bar  */}
         <div className="relative h-[10%] w-full bg-[#F5FCFC] border-b-1 border-[#1ecbe1] flex justify-between items-center">
-          <div className="w-[20vw]  h-full flex justify-center gap-1 items-center bodrer-r-solid border-[#1ecbe1] border-r-[1px]">
+          <div
+            onClick={() => {
+              setViewprofile(false);
+              setActiveView("allpost");
+            }}
+            className="w-[20vw] cursor-pointer h-full flex justify-center gap-1 items-center bodrer-r-solid border-[#1ecbe1] border-r-[1px]"
+          >
             <ShoppingCart
               size={45}
               className=" text-[#1ecbe1] border-2 p-2 rounded-full bg-black"
@@ -564,21 +487,38 @@ function Purch_Dashboard() {
           <div className="w-[20vw] cursor-pointer  gap-2  h-full flex justify-center   items-center ">
             <button
               onClick={() => {
-                navigate("/dashboard");
+                if (loggedin) {
+                  navigate("/dashboard");
+                } else {
+                  navigate("/");
+                }
               }}
               className="w-[100px] cursor-pointer rounded-sm h-[38px] bg-[#1ecbe1] flex  justify-center items-center "
             >
               Sell Product
             </button>
-            <button
-              onClick={() => {
-                setViewprofile(true);
-              }}
-              className="w-[100px] cursor-pointer rounded-sm h-[38px] bg-[#1ecbe1] flex  justify-center items-center "
-            >
-              <User size={20} className=" text-black" />
-              Profile
-            </button>
+            {loggedin && (
+              <button
+                onClick={() => {
+                  setViewprofile(true);
+                }}
+                className="w-[100px] cursor-pointer rounded-sm h-[38px] bg-[#1ecbe1] flex  justify-center items-center "
+              >
+                <User size={20} className=" text-black" />
+                Profile
+              </button>
+            )}
+            {!loggedin && (
+              <button
+                onClick={() => {
+                  navigate("/");
+                }}
+                className="w-[100px] cursor-pointer rounded-sm h-[38px] bg-[#1ecbe1] flex  justify-center items-center "
+              >
+                <User size={20} className=" text-black" />
+                Login
+              </button>
+            )}
           </div>
           {viewprofile && (
             <div className="absolute overflow-hidden border-1 border-[#F5FCFC] pt-2 w-[23%] h-[60vh] z-45 bg-[#1ecbe1] top-[10vh] rounded-2xl left-[76vw] flex items-center flex-col">
@@ -596,18 +536,30 @@ function Purch_Dashboard() {
                 <h1>{userEmail}</h1>
               </div>
               <div className="w-full h-[55%] py-6 p-12 grid gap-2 grid-rows-3">
+                {activeView === "allpost" && (
+                  <button
+                    onClick={displayOrdersfun}
+                    className="w-full h-full flex cursor-pointer justify-center items-center gap-2 bg-black text-white "
+                  >
+                    <BiSolidPurchaseTagAlt size={24} />
+                    My Purchase
+                  </button>
+                )}
+                {activeView === "displayOrders" && (
+                  <button
+                    onClick={() => {
+                      setActiveView("allpost"), setViewprofile(false);
+                    }}
+                    className="w-full h-full flex cursor-pointer justify-center items-center gap-2 bg-black text-white "
+                  >
+                    <BiSolidPurchaseTagAlt size={24} />
+                    Products
+                  </button>
+                )}
                 <button
-                  onClick={displayOrdersfun}
-                  className="w-full h-full flex cursor-pointer justify-center items-center gap-2 bg-black text-white "
+                  onClick={logout}
+                  className="w-full cursor-pointer h-full flex justify-center items-center gap-2 bg-black text-white "
                 >
-                  <UserRoundCog size={24} />
-                  My Orders
-                </button>
-                <button className="w-full h-full  bg-black text-white flex justify-center items-center gap-2">
-                  <IoStatsChartSharp className="text-[20px]" />
-                  My Purcahse
-                </button>
-                <button className="w-full h-full flex justify-center items-center gap-2 bg-black text-white ">
                   <IoLogOutOutline className="text-[25px]" /> Logout
                 </button>
               </div>
@@ -767,8 +719,12 @@ function Purch_Dashboard() {
                 </button>
                 <button
                   onClick={() => {
-                    setvieworder(true);
-                    calculateCartTotals();
+                    if (loggedin) {
+                      setvieworder(true);
+                      calculateCartTotals();
+                    } else {
+                      navigate("/");
+                    }
                   }}
                   className="h-full w-1/2 bg-black text-[18px] cursor-pointer text-[#1ecbe1]"
                 >

@@ -148,6 +148,42 @@ router.put("/cancel/:orderId", protect, async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
+router.put("/deliver/:orderId", protect, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    console.log("orderId");
+
+    // Find all order records with the same orderId
+    const orders = await Order.find({ orderId });
+
+    if (!orders.length) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    // Check if the order is already canceled
+    if (orders[0].status === "delivered") {
+      return res.status(400).json({ message: "Order is already delivered." });
+    }
+
+    // Restore stock for each product in the order
+    for (const order of orders) {
+      const product = await Product.findOne({ id: order.productId });
+
+      if (product) {
+        product.items += order.itemsCount; // Add back the stock
+        await product.save();
+      }
+    }
+
+    // Update all orders with this orderId to "Canceled"
+    await Order.updateMany({ orderId }, { status: "delivered" });
+
+    res.status(200).json({ message: "Order delivered successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
 
 router.get("/myorders", protect, async (req, res) => {
   try {
@@ -168,6 +204,139 @@ router.get("/myorders", protect, async (req, res) => {
     }
 
     res.status(200).json(userOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+router.get("/sellerorder", protect, async (req, res) => {
+  try {
+    const sellerID = req.user.id; // Get the logged-in user's email
+    console.log(sellerID);
+
+    if (!sellerID) {
+      return res.status(400).json({ message: "User ID not found." });
+    }
+
+    // Fetch orders where the customerEmail matches the logged-in user
+    const userOrders = await Order.find({ sellerId: sellerID });
+
+    if (userOrders.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for this user." });
+    }
+
+    res.status(200).json(userOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+router.get("/pendingorders", protect, async (req, res) => {
+  try {
+    const sellerID = req.user.id; // Get the logged-in user's ID
+
+    if (!sellerID) {
+      return res.status(400).json({ message: "User ID not found." });
+    }
+
+    // Fetch only orders that belong to the seller and have a status of "pending"
+    const pendingOrders = await Order.find({
+      sellerId: sellerID,
+      status: "pending",
+    });
+
+    if (pendingOrders.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No pending orders found for this seller." });
+    }
+
+    res.status(200).json(pendingOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+router.get("/deliverorder", protect, async (req, res) => {
+  try {
+    const sellerID = req.user.id; // Get the logged-in user's ID
+
+    if (!sellerID) {
+      return res.status(400).json({ message: "User ID not found." });
+    }
+
+    // Fetch only orders that belong to the seller and have a status of "pending"
+    const pendingOrders = await Order.find({
+      sellerId: sellerID,
+      status: "delivered",
+    });
+
+    if (pendingOrders.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No delivered orders found for this seller." });
+    }
+
+    res.status(200).json(pendingOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+router.get("/canceledorders", protect, async (req, res) => {
+  console.log("yess");
+  try {
+    const sellerID = req.user.id; // Get the logged-in user's ID
+
+    if (!sellerID) {
+      return res.status(400).json({ message: "User ID not found." });
+    }
+
+    // Fetch only orders that belong to the seller and have a status of "pending"
+    const pendingOrders = await Order.find({
+      sellerId: sellerID,
+      status: "Canceled",
+    });
+
+    if (pendingOrders.length === 0) {
+      console.log(pendingOrders);
+      return res
+        .status(404)
+        .json({ message: "No pending orders found for this seller." });
+    }
+
+    res.status(200).json(pendingOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+router.get("/deliveredorders", protect, async (req, res) => {
+  console.log("yess");
+  try {
+    const sellerID = req.user.id; // Get the logged-in user's ID
+
+    if (!sellerID) {
+      return res.status(400).json({ message: "User ID not found." });
+    }
+
+    // Fetch only orders that belong to the seller and have a status of "pending"
+    const pendingOrders = await Order.find({
+      sellerId: sellerID,
+      status: "delivered",
+    });
+
+    if (pendingOrders.length === 0) {
+      console.log(pendingOrders);
+      return res
+        .status(404)
+        .json({ message: "No pending orders found for this seller." });
+    }
+
+    res.status(200).json(pendingOrders);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error." });

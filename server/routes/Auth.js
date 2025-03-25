@@ -85,4 +85,25 @@ router.get("/me", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+router.post("/logout", protect, async (req, res) => {
+  try {
+    // Invalidate the token (optional): You could add to a blacklist in your DB if necessary.
+
+    // Respond to the client that the logout was successful
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/validate", protect, async (req, res) => {
+  try {
+    // Token is already validated by `protect` middleware
+    res.status(200).json({ message: "Token is valid" });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
 export default router;

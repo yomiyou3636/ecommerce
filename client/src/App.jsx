@@ -3,7 +3,6 @@ import Dashboard from "./components/dashboard";
 import Signup from "./components/Signup";
 import Purch_Dashboard from "./components/purch_dashboard";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
 import "./App.css";
 
 function App() {

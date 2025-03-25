@@ -43,6 +43,9 @@ function Dashboard() {
   const [viewmore, setviewmore] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
   const [productid, setproductid] = useState(null);
+  const [loggedin, setloggedin] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate(); // Initialize navigate
 
   const handleFileChange = (event) => {
@@ -268,7 +271,157 @@ function Dashboard() {
       Swal.fire("Error!", "An error occurred during deletion.", "error");
     }
   };
+  const logout = async () => {
+    const token = localStorage.getItem("token"); // Get the JWT token from local storage
 
+    try {
+      // Make the logout request to the backend
+      const response = await axios.post(
+        "http://localhost:5000/auth/logout", // Replace with your actual logout endpoint
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        localStorage.removeItem("token"); // Remove token from localStorage
+        navigate("/"); // Redirect to login page
+      }
+    } catch (error) {
+      console.error("Logout Error:", error);
+      // Handle any error (e.g., display a message)
+    }
+  };
+  const fetchMyOrders = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token from storage
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/order/sellerorder",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send token to backend
+          },
+        }
+      );
+
+      setOrders(response.data);
+      setActiveView("myoders");
+      // setViewprofile(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchpendingorder = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token from storage
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/order/pendingorders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send token to backend
+          },
+        }
+      );
+
+      setOrders(response.data);
+      setActiveView("pendingorder");
+      // setViewprofile(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchcanceledorder = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token from storage
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/order/canceledorders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send token to backend
+          },
+        }
+      );
+
+      setOrders(response.data);
+      setActiveView("canceledorder");
+      // setViewprofile(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchdeliveredorder = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token from storage
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/order/deliveredorders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send token to backend
+          },
+        }
+      );
+
+      setOrders(response.data);
+      setActiveView("deliveredorder");
+      // setViewprofile(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const deliverorder = async (orderId) => {
+    const token = localStorage.getItem("token"); // Get JWT token from local storage or wherever it is stored
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/order/deliver/${orderId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the JWT token to the Authorization header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Order delivered successfully");
+        // Handle success (e.g., update UI)
+      } else {
+        toast.error("Failed to deliver order: " + response.data.message);
+        // Handle failure (e.g., display an error message)
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Error delivering the order: " + error.message);
+      // Handle error (e.g., display an error message)
+    }
+  };
   useEffect(() => {
     if (selectedFile) {
       console.log(selectedFile.name);
@@ -276,6 +429,14 @@ function Dashboard() {
   }, [selectedFile]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setloggedin(true);
+    } else {
+      setloggedin(false);
+      navigate("/");
+    }
+
     fetchUserData();
   }, []);
   return (
@@ -525,7 +686,10 @@ function Dashboard() {
                 <h1>{userEmail}</h1>
               </div>
               <div className="w-full h-[55%] py-6 p-12 grid gap-2 grid-rows-3">
-                <button className="w-full h-full flex justify-center items-center gap-2 bg-black text-white ">
+                <button
+                  onClick={logout}
+                  className="w-full cursor-pointer h-full flex justify-center items-center gap-2 bg-black text-white "
+                >
                   <IoLogOutOutline className="text-[25px]" /> Logout
                 </button>
               </div>
@@ -564,21 +728,33 @@ function Dashboard() {
                 <MdOutlinePostAdd className="text-[28px] text-[#1ecbe1]" />
                 Post product
               </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+              <button
+                onClick={fetchMyOrders}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
                 <FaCartFlatbed className="text-[28px] text-[#1ecbe1]" />
                 All Orders
               </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+              <button
+                onClick={fetchpendingorder}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
                 <MdOutlinePending className="text-[28px] text-[#1ecbe1]" />
                 Pending Order
               </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+              <button
+                onClick={fetchdeliveredorder}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
                 <TbTruckDelivery className="text-[28px] text-[#1ecbe1]" />
                 Delivered Order
               </button>
-              <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
+              <button
+                onClick={fetchcanceledorder}
+                className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 "
+              >
                 <ImCancelCircle className="text-[25px] text-[#1ecbe1]" />
-                Cancelled Order
+                Canceled Order
               </button>
               <button className="w-full h-full bg-white flex justify-center cursor-pointer hover:gap-4 transition-all duration-250 items-center gap-2 ">
                 <AiOutlineHistory className="text-[28px] text-[#1ecbe1]" />
@@ -586,7 +762,10 @@ function Dashboard() {
               </button>
             </div>
             <div className="w-full h-[20%] flex justify-center items-center  ">
-              <button className="w-[70%] h-[50%] bg-black text-white rounded-2xl flex justify-center items-center gap-2">
+              <button
+                onClick={logout}
+                className="w-[70%] cursor-pointer h-[50%] bg-black text-white rounded-2xl flex justify-center items-center gap-2"
+              >
                 <IoLogOutOutline className="text-[30px] text-whilte " />
                 Logout
               </button>
@@ -807,6 +986,155 @@ function Dashboard() {
             {activeView === "dashboard" && (
               <div className="w-full h-full flex justify-center items-center">
                 <h1> Dashboard</h1>
+              </div>
+            )}
+            {activeView === "myoders" && (
+              <div className="w-full h-[90vh] p-4 ">
+                {orders.length === 0 && !loading && !error && (
+                  <p className="text-center">No orders found.</p>
+                )}
+
+                {orders.length > 0 && (
+                  <div className="w-full h-full ">
+                    <div className="grid grid-cols-6 font-bold bg-[#1ecbe1] p-2 rounded">
+                      <p>Order ID</p>
+                      <p>Product ID</p>
+                      <p>Product Name</p>
+                      <p>Items Count</p>
+                      <p>Total Amount</p>
+                      <p>Status</p>
+                    </div>
+                    <div className="w-full h-[90%] overflow-y-scroll">
+                      {orders.map((order) => (
+                        <div
+                          key={order._id}
+                          className="grid grid-cols-6 border-b border-[#1ecbe1] p-1 "
+                        >
+                          <p className="h-[35px]">{order.orderId}</p>
+                          <p>{order.productId}</p>
+                          <p>{order.productName}</p>
+                          <p>{order.itemsCount}</p>
+                          <p>{order.totalAmount}</p>
+                          <p>{order.status}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {activeView === "pendingorder" && (
+              <div className="w-full h-[90vh] p-4 ">
+                {orders.length === 0 && !loading && !error && (
+                  <p className="text-center">No orders found.</p>
+                )}
+
+                {orders.length > 0 && (
+                  <div className="w-full h-full ">
+                    <div className="grid grid-cols-6 font-bold bg-[#1ecbe1] p-2 rounded">
+                      <p>Order ID</p>
+                      <p>Product ID</p>
+                      <p>Product Name</p>
+                      <p>Items Count</p>
+                      <p>Total Amount</p>
+                      <p>Status</p>
+                      <p>Deliver</p>
+                    </div>
+                    <div className="w-full h-[90%] overflow-y-scroll">
+                      {orders.map((order) => (
+                        <div
+                          key={order._id}
+                          className="grid grid-cols-7 border-b border-[#1ecbe1] p-1 "
+                        >
+                          <p className="h-[35px]">{order.orderId}</p>
+                          <p>{order.productId}</p>
+                          <p>{order.productName}</p>
+                          <p>{order.itemsCount}</p>
+                          <p>{order.totalAmount}</p>
+                          <p>{order.status}</p>
+                          <div className="w-full h-full flex justify-center items-center">
+                            <button
+                              onClick={() => deliverorder(order.orderId)}
+                              className="bg-red-600 h-full w-[60%] text-white rounded-lg cursor-pointer"
+                            >
+                              Deliver
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {activeView === "canceledorder" && (
+              <div className="w-full h-[90vh] p-4 ">
+                {orders.length === 0 && !loading && !error && (
+                  <p className="text-center">No orders found.</p>
+                )}
+
+                {orders.length > 0 && (
+                  <div className="w-full h-full ">
+                    <div className="grid grid-cols-6 font-bold bg-[#1ecbe1] p-2 rounded">
+                      <p>Order ID</p>
+                      <p>Product ID</p>
+                      <p>Product Name</p>
+                      <p>Items Count</p>
+                      <p>Total Amount</p>
+                      <p>Status</p>
+                    </div>
+                    <div className="w-full h-[90%] overflow-y-scroll">
+                      {orders.map((order) => (
+                        <div
+                          key={order._id}
+                          className="grid grid-cols-6 border-b border-[#1ecbe1] p-1 "
+                        >
+                          <p className="h-[35px]">{order.orderId}</p>
+                          <p>{order.productId}</p>
+                          <p>{order.productName}</p>
+                          <p>{order.itemsCount}</p>
+                          <p>{order.totalAmount}</p>
+                          <p>{order.status}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {activeView === "deliveredorder" && (
+              <div className="w-full h-[90vh] p-4 ">
+                {orders.length === 0 && !loading && !error && (
+                  <p className="text-center">No orders found.</p>
+                )}
+
+                {orders.length > 0 && (
+                  <div className="w-full h-full ">
+                    <div className="grid grid-cols-6 font-bold bg-[#1ecbe1] p-2 rounded">
+                      <p>Order ID</p>
+                      <p>Product ID</p>
+                      <p>Product Name</p>
+                      <p>Items Count</p>
+                      <p>Total Amount</p>
+                      <p>Status</p>
+                    </div>
+                    <div className="w-full h-[90%] overflow-y-scroll">
+                      {orders.map((order) => (
+                        <div
+                          key={order._id}
+                          className="grid grid-cols-6 border-b border-[#1ecbe1] p-1 "
+                        >
+                          <p className="h-[35px]">{order.orderId}</p>
+                          <p>{order.productId}</p>
+                          <p>{order.productName}</p>
+                          <p>{order.itemsCount}</p>
+                          <p>{order.totalAmount}</p>
+                          <p>{order.status}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
