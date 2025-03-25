@@ -5,7 +5,6 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Helper function to generate the unique orderId
 const generateOrderId = async () => {
   const lastOrder = await Order.findOne().sort({ orderId: -1 }).limit(1);
   const lastOrderId = lastOrder ? lastOrder.orderId : "00000A";
@@ -40,7 +39,6 @@ router.post("/addorder", protect, async (req, res) => {
     let insufficientStockItems = [];
     let orderList = [];
 
-    // Generate a single orderId for all items in this cart
     const orderId = await generateOrderId();
 
     for (const item of orders) {
@@ -52,7 +50,6 @@ router.post("/addorder", protect, async (req, res) => {
           .json({ message: "Each order must have productId and itemsCount." });
       }
 
-      // Find the product details
       const product = await Product.findOne({ id: productId });
 
       if (!product) {
@@ -61,26 +58,23 @@ router.post("/addorder", protect, async (req, res) => {
           .json({ message: `Product not found for ID: ${productId}` });
       }
 
-      // Check if enough stock is available
       if (product.items < itemsCount) {
         insufficientStockItems.push({
           productId,
           available: product.items,
           requested: itemsCount,
         });
-        continue; // Skip adding this order item if stock is insufficient
+        continue;
       }
 
-      // Calculate total amount for this product
       const totalAmount = itemsCount * product.price;
 
-      // Create the order object (now fetching productName from database)
       const newOrder = {
-        orderId, // Shared order ID
+        orderId,
         orderTime: new Date().toLocaleTimeString(),
         itemsCount,
         customerEmail,
-        productName: product.name, // ✅ Corrected: Fetch product name from database
+        productName: product.name,
         sellerId: product.seller,
         totalAmount,
         deliveryLocation,
@@ -89,12 +83,10 @@ router.post("/addorder", protect, async (req, res) => {
 
       orderList.push(newOrder);
 
-      // Deduct the purchased items from stock
       product.items -= itemsCount;
       await product.save();
     }
 
-    // If any product had insufficient stock, return an error
     if (insufficientStockItems.length > 0) {
       return res.status(400).json({
         message: "Order cannot be placed due to insufficient stock.",
@@ -102,7 +94,6 @@ router.post("/addorder", protect, async (req, res) => {
       });
     }
 
-    // Save all orders in bulk
     const savedOrders = await Order.insertMany(orderList);
 
     res.status(201).json(savedOrders);
@@ -117,29 +108,25 @@ router.put("/cancel/:orderId", protect, async (req, res) => {
     const { orderId } = req.params;
     console.log("orderId");
 
-    // Find all order records with the same orderId
     const orders = await Order.find({ orderId });
 
     if (!orders.length) {
       return res.status(404).json({ message: "Order not found." });
     }
 
-    // Check if the order is already canceled
     if (orders[0].status === "canceled") {
       return res.status(400).json({ message: "Order is already canceled." });
     }
 
-    // Restore stock for each product in the order
     for (const order of orders) {
       const product = await Product.findOne({ id: order.productId });
 
       if (product) {
-        product.items += order.itemsCount; // Add back the stock
+        product.items += order.itemsCount;
         await product.save();
       }
     }
 
-    // Update all orders with this orderId to "Canceled"
     await Order.updateMany({ orderId }, { status: "Canceled" });
 
     res.status(200).json({ message: "Order canceled successfully." });
@@ -153,19 +140,16 @@ router.put("/deliver/:orderId", protect, async (req, res) => {
     const { orderId } = req.params;
     console.log("orderId");
 
-    // Find all order records with the same orderId
     const orders = await Order.find({ orderId });
 
     if (!orders.length) {
       return res.status(404).json({ message: "Order not found." });
     }
 
-    // Check if the order is already canceled
     if (orders[0].status === "delivered") {
       return res.status(400).json({ message: "Order is already delivered." });
     }
 
-    // Restore stock for each product in the order
     for (const order of orders) {
       const product = await Product.findOne({ id: order.productId });
 
@@ -175,7 +159,6 @@ router.put("/deliver/:orderId", protect, async (req, res) => {
       }
     }
 
-    // Update all orders with this orderId to "Canceled"
     await Order.updateMany({ orderId }, { status: "delivered" });
 
     res.status(200).json({ message: "Order delivered successfully." });
@@ -194,7 +177,6 @@ router.get("/myorders", protect, async (req, res) => {
       return res.status(400).json({ message: "User email not found." });
     }
 
-    // Fetch orders where the customerEmail matches the logged-in user
     const userOrders = await Order.find({ customerEmail: userEmail });
 
     if (userOrders.length === 0) {
@@ -219,7 +201,6 @@ router.get("/sellerorder", protect, async (req, res) => {
       return res.status(400).json({ message: "User ID not found." });
     }
 
-    // Fetch orders where the customerEmail matches the logged-in user
     const userOrders = await Order.find({ sellerId: sellerID });
 
     if (userOrders.length === 0) {
@@ -242,7 +223,6 @@ router.get("/pendingorders", protect, async (req, res) => {
       return res.status(400).json({ message: "User ID not found." });
     }
 
-    // Fetch only orders that belong to the seller and have a status of "pending"
     const pendingOrders = await Order.find({
       sellerId: sellerID,
       status: "pending",
@@ -268,7 +248,6 @@ router.get("/deliverorder", protect, async (req, res) => {
       return res.status(400).json({ message: "User ID not found." });
     }
 
-    // Fetch only orders that belong to the seller and have a status of "pending"
     const pendingOrders = await Order.find({
       sellerId: sellerID,
       status: "delivered",
@@ -295,7 +274,6 @@ router.get("/canceledorders", protect, async (req, res) => {
       return res.status(400).json({ message: "User ID not found." });
     }
 
-    // Fetch only orders that belong to the seller and have a status of "pending"
     const pendingOrders = await Order.find({
       sellerId: sellerID,
       status: "Canceled",
@@ -323,7 +301,6 @@ router.get("/deliveredorders", protect, async (req, res) => {
       return res.status(400).json({ message: "User ID not found." });
     }
 
-    // Fetch only orders that belong to the seller and have a status of "pending"
     const pendingOrders = await Order.find({
       sellerId: sellerID,
       status: "delivered",
