@@ -43,7 +43,6 @@ function Dashboard() {
   const [viewmore, setviewmore] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
   const [productid, setproductid] = useState(null);
-  const [loggedin, setloggedin] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate(); // Initialize navigate
@@ -430,10 +429,7 @@ function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      setloggedin(true);
-    } else {
-      setloggedin(false);
+    if (!token) {
       navigate("/");
     }
 
